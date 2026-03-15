@@ -14,6 +14,7 @@
             --muted: #737373;
             --green: #4ade80;
             --orange: #f59e0b;
+            --red: #ff4b4b;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -30,8 +31,7 @@
         .header { text-align: center; margin-bottom: 32px; }
         h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
         p.sub { color: var(--muted); font-size: 15px; }
-        
-        /* New Clock Section */
+
         .clock-section {
             text-align: center;
             margin-bottom: 24px;
@@ -63,9 +63,8 @@
             padding: 24px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
             margin-bottom: 24px;
-            position: relative;
         }
-        .search-wrap { position: relative; margin-bottom: 20px; }
+        .search-wrap { position: relative; margin-bottom: 24px; }
         input {
             width: 100%;
             background: #202020;
@@ -96,13 +95,45 @@
             cursor: pointer;
             font-size: 14px;
             border-bottom: 1px solid var(--border);
+            text-align: left;
         }
         .autocomplete-item:hover { background: #2a2a2a; }
         .autocomplete-item .city-name { font-weight: 600; color: var(--text); }
         .autocomplete-item .city-country { font-size: 12px; color: var(--muted); margin-top: 2px; }
-        
+
+        /* Analog Clock */
+        #analog-clock-wrap {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 24px;
+        }
+        #clock-face {
+            width: 100%;
+            height: 100%;
+        }
+        .hand {
+            stroke-linecap: round;
+            transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+        }
+        .hour-hand { stroke: var(--text); stroke-width: 4; }
+        .minute-hand { stroke: var(--muted); stroke-width: 2; }
+        .usage-arc {
+            fill: none;
+            stroke-width: 12;
+            opacity: 0.3;
+        }
+        .marker { stroke: var(--border); stroke-width: 1; }
+        .marker.major { stroke: var(--muted); stroke-width: 2; }
+        .marker-text {
+            font-size: 9px;
+            font-weight: 700;
+            fill: var(--muted);
+            text-anchor: middle;
+        }
+
         #results {
-            margin-top: 24px;
+            margin-top: 0;
             padding-top: 24px;
             border-top: 1px solid var(--border);
         }
@@ -112,6 +143,7 @@
             padding: 20px;
             border: 1px solid rgba(217,119,87,0.2);
             position: relative;
+            text-align: left;
         }
         .indicator-dot {
             position: absolute;
@@ -150,7 +182,7 @@
         }
         .status-on { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
         .status-off { background: rgba(245,158,11,0.1); color: var(--orange); border: 1px solid rgba(245,158,11,0.2); }
-        
+
         .faq { width: 100%; margin-top: 12px; }
         details {
             background: var(--surface);
@@ -168,7 +200,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        .content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; }
+        .faq-content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; text-align: left; }
     </style>
 </head>
 <body>
@@ -188,9 +220,19 @@
                 <input type="text" id="citySearch" placeholder="Search any city (e.g. Sydney, Paris)..." autocomplete="off">
                 <div id="autocomplete" class="autocomplete-results"></div>
             </div>
-            
+
+            <div id="analog-clock-wrap">
+                <svg id="clock-face" viewBox="0 0 200 200">
+                    <g id="arcs"></g>
+                    <g id="markers"></g>
+                    <line id="hour-hand" class="hand hour-hand" x1="100" y1="100" x2="100" y2="45" />
+                    <line id="minute-hand" class="hand minute-hand" x1="100" y1="100" x2="100" y2="35" />
+                    <circle cx="100" cy="100" r="3" fill="var(--text)" />
+                </svg>
+            </div>
+
             <div id="results">
-                <div id="locationLabel" style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text);">Detecting location...</div>
+                <div id="locationLabel" style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text); text-align: left;">Detecting location...</div>
                 <div class="window-box">
                     <div id="indicatorDot" class="indicator-dot"></div>
                     <div class="label">Use Claude 2x During</div>
@@ -198,18 +240,18 @@
                     <span class="avoid-label">Avoid (Normal Limits)</span>
                     <div id="avoidWindow" style="font-size: 13px; font-weight: 600; color: var(--muted);">--</div>
                 </div>
-                <div id="status" class="status-badge"></div>
+                <div style="text-align: left;"><div id="status" class="status-badge"></div></div>
             </div>
         </div>
 
         <div class="faq">
             <details>
                 <summary>What is the promotion?</summary>
-                <div class="content">From March 13 to March 27, 2026, your 5-hour usage limit is doubled during off-peak hours (outside 8 AM–2 PM ET).</div>
+                <div class="faq-content">From March 13 to March 27, 2026, your 5-hour usage limit is doubled during off-peak hours (outside 8 AM–2 PM ET).</div>
             </details>
             <details>
                 <summary>Who is eligible?</summary>
-                <div class="content">Free, Pro, Max, and Team plans are included. Enterprise plans are excluded.</div>
+                <div class="faq-content">Free, Pro, Max, and Team plans are included. Enterprise plans are excluded.</div>
             </details>
         </div>
     </div>
@@ -224,9 +266,56 @@
         const statusDisplay = document.getElementById('status');
         const locLabel = document.getElementById('locationLabel');
         const indicatorDot = document.getElementById('indicatorDot');
-        
+        const arcGroup = document.getElementById('arcs');
+
         let currentTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         let debounceTimer = null;
+
+        function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        }
+
+        function describeArc(x, y, radius, startAngle, endAngle) {
+            const start = polarToCartesian(x, y, radius, endAngle);
+            const end = polarToCartesian(x, y, radius, startAngle);
+            const arcLength = (endAngle - startAngle + 360) % 360;
+            const largeArcFlag = arcLength <= 180 ? "0" : "1";
+            return [
+                "M", start.x, start.y, 
+                "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+            ].join(" ");
+        }
+
+        function createMarkers() {
+            const markers = document.getElementById('markers');
+            for (let i = 0; i < 24; i++) {
+                const angle = i * 15;
+                const isMajor = i % 3 === 0;
+                const length = isMajor ? 8 : 4;
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("class", `marker ${isMajor ? 'major' : ''}`);
+                line.setAttribute("x1", "100");
+                line.setAttribute("y1", "25");
+                line.setAttribute("x2", "100");
+                line.setAttribute("y2", 25 + length);
+                line.setAttribute("transform", `rotate(${angle} 100 100)`);
+                markers.appendChild(line);
+
+                if (isMajor) {
+                    const text = polarToCartesian(100, 100, 88, angle);
+                    const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    textEl.setAttribute("class", "marker-text");
+                    textEl.setAttribute("x", text.x);
+                    textEl.setAttribute("y", text.y + 3);
+                    textEl.textContent = i;
+                    markers.appendChild(textEl);
+                }
+            }
+        }
 
         function fmtH(h) {
             const hh = Math.floor(h);
@@ -237,20 +326,24 @@
 
         function updateClock() {
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-GB', { 
-                timeZone: currentTimeZone,
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            clockEl.textContent = timeStr;
+            const localTime = new Date(now.toLocaleString('en-US', { timeZone: currentTimeZone }));
+            const hours = localTime.getHours();
+            const minutes = localTime.getMinutes();
+            const seconds = localTime.getSeconds();
 
-            // Check if current time in ET is peak
+            const hourAngle = (hours * 15) + (minutes * 0.25);
+            const minuteAngle = (minutes * 6);
+            document.getElementById('hour-hand').setAttribute("transform", `rotate(${hourAngle} 100 100)`);
+            document.getElementById('minute-hand').setAttribute("transform", `rotate(${minuteAngle} 100 100)`);
+
+            clockEl.textContent = localTime.toLocaleTimeString('en-GB', { 
+                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+
             const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
             const etH = etNow.getHours();
             const isPeak = etH >= 8 && etH < 14;
-
+            
             if (!isPeak) {
                 statusDisplay.className = 'status-badge status-on';
                 statusDisplay.innerHTML = '🟢 2x Limit Active';
@@ -267,17 +360,28 @@
         function calculate(timeZone, cityName) {
             currentTimeZone = timeZone;
             clockLocEl.textContent = cityName ? cityName.split(',')[0] + ' Time' : 'Local Time';
-            
+
             const now = new Date();
-            // Calculate relative to ET (8 AM - 2 PM)
             const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
             const localNow = new Date(now.toLocaleString('en-US', { timeZone }));
-            
-            const diffMs = localNow - etNow;
-            const diffH = diffMs / 3600000;
 
+            const diffH = (localNow - etNow) / 3600000;
             let peakStart = (8 + diffH + 24) % 24;
             let peakEnd = (14 + diffH + 24) % 24;
+
+            // Draw arcs
+            arcGroup.innerHTML = '';
+            const peakPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            peakPath.setAttribute("class", "usage-arc");
+            peakPath.setAttribute("stroke", "var(--red)");
+            peakPath.setAttribute("d", describeArc(100, 100, 75, peakStart * 15, peakEnd * 15));
+            arcGroup.appendChild(peakPath);
+
+            const optPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            optPath.setAttribute("class", "usage-arc");
+            optPath.setAttribute("stroke", "var(--green)");
+            optPath.setAttribute("d", describeArc(100, 100, 75, peakEnd * 15, peakStart * 15));
+            arcGroup.appendChild(optPath);
 
             let slots = [];
             if (peakStart < peakEnd) {
@@ -290,7 +394,7 @@
             locLabel.innerText = cityName || timeZone.split('/').pop().replace(/_/g, ' ');
             windowDisplay.innerHTML = slots.map(s => `<div class="time-slot">${s}</div>`).join('');
             avoidDisplay.innerText = `${fmtH(peakStart)} – ${fmtH(peakEnd)}`;
-            
+
             updateClock();
         }
 
@@ -327,7 +431,8 @@
         });
 
         document.addEventListener('click', (e) => { if (!search.contains(e.target)) auto.style.display = 'none'; });
-        
+
+        createMarkers();
         setInterval(updateClock, 1000);
         window.onload = () => calculate(currentTimeZone, null);
     </script>
