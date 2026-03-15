@@ -1,1 +1,167 @@
-Add live 24h analog clock with usage zone arcs and arrows
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude 2x Hours Finder</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+        h1 { margin-bottom: 2rem; font-size: 1.5rem; }
+        #clock-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            margin: 0 auto;
+        }
+        #clock-face {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .hand {
+            stroke-linecap: round;
+            transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+        }
+        .hour-hand { stroke: #ff3b30; stroke-width: 4; }
+        .minute-hand { stroke: #0071e3; stroke-width: 2; }
+        .usage-arc {
+            fill: none;
+            stroke-width: 15;
+            opacity: 0.2;
+        }
+        .peak-zone { stroke: #ff9500; }
+        .optimal-zone { stroke: #34c759; }
+        .marker { stroke: #d2d2d7; stroke-width: 1; }
+        .marker.major { stroke: #86868b; stroke-width: 2; }
+        .time-display {
+            margin-top: 1rem;
+            font-size: 2rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .legend {
+            margin-top: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            text-align: left;
+        }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+        .dot { width: 12px; height: 12px; border-radius: 3px; }
+        .info {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #86868b;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Claude 2x Hours Finder</h1>
+        <div id="clock-container">
+            <svg id="clock-face" viewBox="0 0 200 200">
+                <!-- Usage Zones (24h clock) -->
+                <!-- Optimal: 00:00 - 07:00 (Low global traffic) -->
+                <path class="usage-arc optimal-zone" d="M 100,25 A 75,75 0 0 1 170.6,70.6" transform="rotate(-90 100 100)" />
+                <!-- Peak: 09:00 - 21:00 (High global traffic) -->
+                <path class="usage-arc peak-zone" d="M 100,25 A 75,75 0 1 1 100,175" transform="rotate(135 100 100)" />
+                
+                <g id="markers"></g>
+                
+                <!-- Time Arrow / Hands -->
+                <line id="hour-hand" class="hand hour-hand" x1="100" y1="100" x2="100" y2="45" />
+                <line id="minute-hand" class="hand minute-hand" x1="100" y1="100" x2="100" y2="35" />
+                <circle cx="100" cy="100" r="3" fill="#1d1d1f" />
+            </svg>
+        </div>
+        <div id="time-display" class="time-display">00:00:00</div>
+        <div class="legend">
+            <div class="legend-item"><div class="dot" style="background: #34c759;"></div> 🟢 Optimal Hours</div>
+            <div class="legend-item"><div class="dot" style="background: #ff9500;"></div> 🟠 Peak Usage</div>
+        </div>
+        <p class="info">
+            This 24h clock shows the best times to use Claude. Green zones indicate lower global traffic, maximizing your message limits.
+        </p>
+    </div>
+
+    <script>
+        function createMarkers() {
+            const markers = document.getElementById('markers');
+            for (let i = 0; i < 24; i++) {
+                const angle = i * 15;
+                const isMajor = i % 3 === 0;
+                const length = isMajor ? 8 : 4;
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("class", `marker ${isMajor ? 'major' : ''}`);
+                line.setAttribute("x1", "100");
+                line.setAttribute("y1", "25");
+                line.setAttribute("x2", "100");
+                line.setAttribute("y2", 25 + length);
+                line.setAttribute("transform", `rotate(${angle} 100 100)`);
+                markers.appendChild(line);
+                
+                if (isMajor) {
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    const rad = (angle - 90) * (Math.PI / 180);
+                    const r = 88;
+                    const x = 100 + r * Math.cos(rad);
+                    const y = 100 + r * Math.sin(rad);
+                    text.setAttribute("x", x);
+                    text.setAttribute("y", y + 3);
+                    text.setAttribute("text-anchor", "middle");
+                    text.setAttribute("font-size", "8");
+                    text.setAttribute("font-weight", "bold");
+                    text.setAttribute("fill", "#86868b");
+                    text.textContent = i;
+                    markers.appendChild(text);
+                }
+            }
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // 24-hour clock: 360 degrees / 24 hours = 15 degrees per hour
+            const hourAngle = (hours * 15) + (minutes * 0.25);
+            // Minute hand still does 360 degrees per 60 minutes = 6 degrees per minute
+            const minuteAngle = (minutes * 6);
+
+            document.getElementById('hour-hand').setAttribute("transform", `rotate(${hourAngle} 100 100)`);
+            document.getElementById('minute-hand').setAttribute("transform", `rotate(${minuteAngle} 100 100)`);
+            
+            document.getElementById('time-display').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        createMarkers();
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
