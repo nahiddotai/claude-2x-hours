@@ -5,60 +5,157 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claude 2x Hours Finder</title>
 <style>
-  :root { --bg: #0f0f0f; --surface: #1a1a1a; --border: #2e2e2e; --accent: #d97757; --text: #f0f0f0; --muted: #8a8a8a; }
-  body { background: var(--bg); color: var(--text); font-family: system-ui; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 500px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
-  h1 { font-size: 24px; margin-bottom: 8px; }
-  p.sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
-  input { width: 100%; background: #242424; border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 12px; font-size: 16px; outline: none; margin-bottom: 12px; }
-  #results { display: none; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px; }
-  .time-box { background: #242424; border-radius: 8px; padding: 16px; margin-top: 12px; border-left: 4px solid var(--accent); }
-  .label { font-size: 11px; font-weight: bold; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  .time { font-size: 20px; font-weight: bold; }
-  .faq { margin-top: 30px; width: 100%; max-width: 500px; }
-  details { background: var(--surface); border: 1px solid var(--border); margin-bottom: 8px; border-radius: 8px; overflow: hidden; }
-  summary { padding: 12px; cursor: pointer; font-weight: 600; font-size: 14px; }
-  .content { padding: 12px; font-size: 13px; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--border); }
+  :root { --bg: #0b0b0b; --surface: #151515; --border: #262626; --accent: #d97757; --text: #f5f5f5; --muted: #737373; --green: #4ade80; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; min-height: 100vh; }
+  .container { width: 100%; max-width: 480px; }
+  .header { text-align: center; margin-bottom: 32px; }
+  h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+  p.sub { color: var(--muted); font-size: 15px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); margin-bottom: 24px; position: relative; }
+  .search-wrap { position: relative; margin-bottom: 20px; }
+  input { width: 100%; background: #202020; border: 1px solid var(--border); border-radius: 10px; color: #fff; padding: 14px 16px; font-size: 16px; outline: none; transition: border-color 0.2s; }
+  input:focus { border-color: var(--accent); }
+  .autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: #202020; border: 1px solid var(--border); border-radius: 10px; margin-top: 4px; z-index: 10; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+  .autocomplete-item { padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--border); }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item:hover { background: #2a2a2a; }
+  #results { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .window-box { background: rgba(217,119,87,0.08); border-radius: 12px; padding: 20px; border: 1px solid rgba(217,119,87,0.2); }
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); margin-bottom: 8px; }
+  .time { font-size: 24px; font-weight: 800; color: #fff; }
+  .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; margin-top: 12px; }
+  .status-on { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+  .status-off { background: rgba(115,115,115,0.1); color: var(--muted); border: 1px solid rgba(115,115,115,0.2); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .dot-on { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .faq { width: 100%; margin-top: 12px; }
+  details { background: var(--surface); border: 1px solid var(--border); margin-bottom: 10px; border-radius: 12px; overflow: hidden; }
+  summary { padding: 16px; cursor: pointer; font-weight: 600; font-size: 14px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; color: var(--muted); font-size: 18px; transition: transform 0.2s; }
+  details[open] summary::after { transform: rotate(45deg); }
+  .content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; }
 </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Claude 2x Hours</h1>
-    <p class="sub">Find your best local hours for doubled usage limits.</p>
-    <input type="text" id="cityInput" placeholder="Enter your city (e.g. Sydney)...">
-    <div id="results">
-      <div class="time-box">
-        <div class="label">Your 2x Usage Window</div>
-        <div id="localWindow" class="time">--</div>
+  <div class="container">
+    <div class="header">
+      <h1>Claude 2x</h1>
+      <p class="sub">Find your off-peak usage window</p>
+    </div>
+    <div class="card">
+      <div class="search-wrap">
+        <input type="text" id="citySearch" placeholder="Search city or timezone..." autocomplete="off">
+        <div id="autocomplete" class="autocomplete-results"></div>
       </div>
-      <p style="font-size: 12px; color: var(--muted); margin-top: 8px;">*Based on current Daylight Savings transitions.</p>
+      <div id="results">
+        <div id="locationLabel" style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text);">Detecting location...</div>
+        <div class="window-box">
+          <div class="label">Doubled Usage Hours</div>
+          <div id="localWindow" class="time">--</div>
+        </div>
+        <div id="status" class="status-badge"></div>
+      </div>
+    </div>
+    <div class="faq">
+      <details><summary>What is the promotion?</summary><div class="content">From March 13 to March 27, 2026, your 5-hour usage limit is doubled during off-peak hours (outside 8 AM–2 PM ET).</div></details>
+      <details><summary>Who is eligible?</summary><div class="content">Free, Pro, Max, and Team plans are included. Enterprise plans are excluded. Applied automatically.</div></details>
+      <details><summary>Where does it apply?</summary><div class="content">Claude (web/desktop/mobile), Cowork, Claude Code, Excel, and PowerPoint.</div></details>
     </div>
   </div>
-  <div class="faq">
-    <details><summary>What is the promotion?</summary><div class="content">From March 13 to March 27, 2026, usage is doubled outside 8 AM-2 PM ET.</div></details>
-    <details><summary>Who is eligible?</summary><div class="content">Free, Pro, Max, and Team plans. Enterprise excluded.</div></details>
-    <details><summary>Where does it apply?</summary><div class="content">Web, Desktop, Mobile, Cowork, Claude Code, Excel, and PowerPoint.</div></details>
-  </div>
+
   <script>
-    const input = document.getElementById('cityInput');
-    const results = document.getElementById('results');
-    const display = document.getElementById('localWindow');
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        const city = input.value.trim();
-        if (!city) return;
-        // Basic mock logic for demonstration since full tz database requires heavy libraries
-        // In a real app, use Intl.DateTimeFormat or a library.
-        const now = new Date();
-        const offset = -now.getTimezoneOffset() / 60;
-        const etOffset = -4; // EDT in March
-        const diff = offset - etOffset;
-        let start = (8 + diff + 24) % 24;
-        let end = (14 + diff + 24) % 24;
-        const fmt = (h) => h === 0 ? '12 AM' : h === 12 ? '12 PM' : h > 12 ? (h-12)+' PM' : h+' AM';
-        display.innerText = `Outside ${fmt(start)} - ${fmt(end)}`;
-        results.style.display = 'block';
+    const cityData = [
+      { name: "Sydney, Australia", offset: 11, tz: "AEDT" },
+      { name: "Melbourne, Australia", offset: 11, tz: "AEDT" },
+      { name: "Brisbane, Australia", offset: 10, tz: "AEST" },
+      { name: "London, UK", offset: 0, tz: "GMT" },
+      { name: "New York, USA", offset: -4, tz: "EDT" },
+      { name: "San Francisco, USA", offset: -7, tz: "PDT" },
+      { name: "Tokyo, Japan", offset: 9, tz: "JST" },
+      { name: "Singapore", offset: 8, tz: "SGT" },
+      { name: "Berlin, Germany", offset: 1, tz: "CET" },
+      { name: "Paris, France", offset: 1, tz: "CET" },
+      { name: "Dubai, UAE", offset: 4, tz: "GST" },
+      { name: "Mumbai, India", offset: 5.5, tz: "IST" }
+    ];
+
+    const search = document.getElementById('citySearch');
+    const auto = document.getElementById('autocomplete');
+    const windowDisplay = document.getElementById('localWindow');
+    const statusDisplay = document.getElementById('status');
+    const locLabel = document.getElementById('locationLabel');
+
+    function calculate(offset, cityName = "Local Time") {
+      const etOffset = -4; // March 2026 EDT
+      const diff = offset - etOffset;
+      let start = (8 + diff + 24) % 24;
+      let end = (14 + diff + 24) % 24;
+      
+      const fmt = (h) => {
+        const hh = Math.floor(h);
+        const mm = (h % 1) * 60;
+        const ampm = hh >= 12 ? 'PM' : 'AM';
+        const h12 = hh % 12 || 12;
+        return `${h12}${mm ? ':'+mm : ''} ${ampm}`;
+      };
+
+      locLabel.innerText = cityName;
+      windowDisplay.innerText = `Outside ${fmt(start)} – ${fmt(end)}`;
+      
+      // Real-time status
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const cityTime = new Date(utc + (3600000 * offset));
+      const currentH = cityTime.getHours() + (cityTime.getMinutes()/60);
+      
+      // Is outside 8-14 ET? 
+      // Translate current city hour back to ET
+      const etH = (currentH - diff + 24) % 24;
+      const isPeak = etH >= 8 && etH < 14;
+      
+      if (!isPeak) {
+        statusDisplay.className = "status-badge status-on";
+        statusDisplay.innerHTML = `<div class="dot dot-on"></div> 2x Limit Currently Active`;
+      } else {
+        statusDisplay.className = "status-badge status-off";
+        statusDisplay.innerHTML = `<div class="dot"></div> Normal Usage Mode`;
       }
+    }
+
+    // Auto-detect on load
+    window.onload = () => {
+      const offset = -new Date().getTimezoneOffset() / 60;
+      calculate(offset, "Current Location");
+    };
+
+    search.addEventListener('input', () => {
+      const val = search.value.toLowerCase();
+      auto.innerHTML = '';
+      if (!val) { auto.style.display = 'none'; return; }
+      
+      const matches = cityData.filter(c => c.name.toLowerCase().includes(val));
+      if (matches.length > 0) {
+        auto.style.display = 'block';
+        matches.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'autocomplete-item';
+          div.innerText = m.name;
+          div.onclick = () => {
+            calculate(m.offset, m.name);
+            search.value = m.name;
+            auto.style.display = 'none';
+          };
+          auto.appendChild(div);
+        });
+      } else {
+        auto.style.display = 'none';
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!search.contains(e.target)) auto.style.display = 'none';
     });
   </script>
 </body>
