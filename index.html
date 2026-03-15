@@ -5,163 +5,331 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claude 2x Hours Finder</title>
     <style>
+        :root {
+            --bg: #0b0b0b;
+            --surface: #151515;
+            --border: #262626;
+            --accent: #d97757;
+            --text: #f5f5f5;
+            --muted: #737373;
+            --green: #4ade80;
+            --orange: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, system-ui, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            padding: 40px 20px;
             min-height: 100vh;
-            margin: 0;
-            background-color: #f5f5f7;
-            color: #1d1d1f;
         }
-        .container {
+        .container { width: 100%; max-width: 480px; }
+        .header { text-align: center; margin-bottom: 32px; }
+        h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+        p.sub { color: var(--muted); font-size: 15px; }
+        
+        /* New Clock Section */
+        .clock-section {
             text-align: center;
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 400px;
+            margin-bottom: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        h1 { margin-bottom: 2rem; font-size: 1.5rem; }
-        #clock-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 100%;
-            margin: 0 auto;
-        }
-        #clock-face {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        .hand {
-            stroke-linecap: round;
-            transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
-        }
-        .hour-hand { stroke: #ff3b30; stroke-width: 4; }
-        .minute-hand { stroke: #0071e3; stroke-width: 2; }
-        .usage-arc {
-            fill: none;
-            stroke-width: 15;
-            opacity: 0.2;
-        }
-        .peak-zone { stroke: #ff9500; }
-        .optimal-zone { stroke: #34c759; }
-        .marker { stroke: #d2d2d7; stroke-width: 1; }
-        .marker.major { stroke: #86868b; stroke-width: 2; }
-        .time-display {
-            margin-top: 1rem;
-            font-size: 2rem;
-            font-weight: 700;
+        .digital-clock {
+            font-size: 42px;
+            font-weight: 800;
             font-variant-numeric: tabular-nums;
+            letter-spacing: -1px;
+            margin-bottom: 4px;
         }
-        .legend {
-            margin-top: 1.5rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-            font-size: 0.8rem;
-            text-align: left;
+        .clock-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--muted);
+            letter-spacing: 0.1em;
         }
-        .legend-item { display: flex; align-items: center; gap: 0.5rem; }
-        .dot { width: 12px; height: 12px; border-radius: 3px; }
-        .info {
-            margin-top: 1.5rem;
-            font-size: 0.85rem;
-            color: #86868b;
-            line-height: 1.4;
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            margin-bottom: 24px;
+            position: relative;
         }
+        .search-wrap { position: relative; margin-bottom: 20px; }
+        input {
+            width: 100%;
+            background: #202020;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: #fff;
+            padding: 14px 16px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--accent); }
+        .autocomplete-results {
+            position: absolute;
+            top: 100%; left: 0; right: 0;
+            background: #202020;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-top: 4px;
+            z-index: 10;
+            max-height: 240px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .autocomplete-item:hover { background: #2a2a2a; }
+        .autocomplete-item .city-name { font-weight: 600; color: var(--text); }
+        .autocomplete-item .city-country { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        
+        #results {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+        .window-box {
+            background: rgba(217,119,87,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(217,119,87,0.2);
+            position: relative;
+        }
+        .indicator-dot {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .time-slot { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+        .avoid-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 16px;
+            display: block;
+            border-top: 1px dashed var(--border);
+            padding-top: 12px;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 99px;
+            margin-top: 16px;
+        }
+        .status-on { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+        .status-off { background: rgba(245,158,11,0.1); color: var(--orange); border: 1px solid rgba(245,158,11,0.2); }
+        
+        .faq { width: 100%; margin-top: 12px; }
+        details {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        summary {
+            padding: 16px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Claude 2x Hours Finder</h1>
-        <div id="clock-container">
-            <svg id="clock-face" viewBox="0 0 200 200">
-                <!-- Usage Zones (24h clock) -->
-                <!-- Optimal: 00:00 - 07:00 (Low global traffic) -->
-                <path class="usage-arc optimal-zone" d="M 100,25 A 75,75 0 0 1 170.6,70.6" transform="rotate(-90 100 100)" />
-                <!-- Peak: 09:00 - 21:00 (High global traffic) -->
-                <path class="usage-arc peak-zone" d="M 100,25 A 75,75 0 1 1 100,175" transform="rotate(135 100 100)" />
-                
-                <g id="markers"></g>
-                
-                <!-- Time Arrow / Hands -->
-                <line id="hour-hand" class="hand hour-hand" x1="100" y1="100" x2="100" y2="45" />
-                <line id="minute-hand" class="hand minute-hand" x1="100" y1="100" x2="100" y2="35" />
-                <circle cx="100" cy="100" r="3" fill="#1d1d1f" />
-            </svg>
+        <div class="header">
+            <h1>Claude 2x</h1>
+            <p class="sub">Find your off-peak usage window</p>
         </div>
-        <div id="time-display" class="time-display">00:00:00</div>
-        <div class="legend">
-            <div class="legend-item"><div class="dot" style="background: #34c759;"></div> 🟢 Optimal Hours</div>
-            <div class="legend-item"><div class="dot" style="background: #ff9500;"></div> 🟠 Peak Usage</div>
+
+        <div class="clock-section">
+            <div id="digitalClock" class="digital-clock">00:00:00</div>
+            <div id="clockLocation" class="clock-label">Local Time</div>
         </div>
-        <p class="info">
-            This 24h clock shows the best times to use Claude. Green zones indicate lower global traffic, maximizing your message limits.
-        </p>
+
+        <div class="card">
+            <div class="search-wrap">
+                <input type="text" id="citySearch" placeholder="Search any city (e.g. Sydney, Paris)..." autocomplete="off">
+                <div id="autocomplete" class="autocomplete-results"></div>
+            </div>
+            
+            <div id="results">
+                <div id="locationLabel" style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text);">Detecting location...</div>
+                <div class="window-box">
+                    <div id="indicatorDot" class="indicator-dot"></div>
+                    <div class="label">Use Claude 2x During</div>
+                    <div id="localWindow" class="time-container">--</div>
+                    <span class="avoid-label">Avoid (Normal Limits)</span>
+                    <div id="avoidWindow" style="font-size: 13px; font-weight: 600; color: var(--muted);">--</div>
+                </div>
+                <div id="status" class="status-badge"></div>
+            </div>
+        </div>
+
+        <div class="faq">
+            <details>
+                <summary>What is the promotion?</summary>
+                <div class="content">From March 13 to March 27, 2026, your 5-hour usage limit is doubled during off-peak hours (outside 8 AM–2 PM ET).</div>
+            </details>
+            <details>
+                <summary>Who is eligible?</summary>
+                <div class="content">Free, Pro, Max, and Team plans are included. Enterprise plans are excluded.</div>
+            </details>
+        </div>
     </div>
 
     <script>
-        function createMarkers() {
-            const markers = document.getElementById('markers');
-            for (let i = 0; i < 24; i++) {
-                const angle = i * 15;
-                const isMajor = i % 3 === 0;
-                const length = isMajor ? 8 : 4;
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("class", `marker ${isMajor ? 'major' : ''}`);
-                line.setAttribute("x1", "100");
-                line.setAttribute("y1", "25");
-                line.setAttribute("x2", "100");
-                line.setAttribute("y2", 25 + length);
-                line.setAttribute("transform", `rotate(${angle} 100 100)`);
-                markers.appendChild(line);
-                
-                if (isMajor) {
-                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    const rad = (angle - 90) * (Math.PI / 180);
-                    const r = 88;
-                    const x = 100 + r * Math.cos(rad);
-                    const y = 100 + r * Math.sin(rad);
-                    text.setAttribute("x", x);
-                    text.setAttribute("y", y + 3);
-                    text.setAttribute("text-anchor", "middle");
-                    text.setAttribute("font-size", "8");
-                    text.setAttribute("font-weight", "bold");
-                    text.setAttribute("fill", "#86868b");
-                    text.textContent = i;
-                    markers.appendChild(text);
-                }
-            }
+        const search = document.getElementById('citySearch');
+        const auto = document.getElementById('autocomplete');
+        const clockEl = document.getElementById('digitalClock');
+        const clockLocEl = document.getElementById('clockLocation');
+        const windowDisplay = document.getElementById('localWindow');
+        const avoidDisplay = document.getElementById('avoidWindow');
+        const statusDisplay = document.getElementById('status');
+        const locLabel = document.getElementById('locationLabel');
+        const indicatorDot = document.getElementById('indicatorDot');
+        
+        let currentTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        let debounceTimer = null;
+
+        function fmtH(h) {
+            const hh = Math.floor(h);
+            const ampm = hh >= 12 ? 'PM' : 'AM';
+            const h12 = hh % 12 || 12;
+            return `${h12} ${ampm}`;
         }
 
         function updateClock() {
             const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-            const seconds = now.getSeconds();
+            const timeStr = now.toLocaleTimeString('en-GB', { 
+                timeZone: currentTimeZone,
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            clockEl.textContent = timeStr;
 
-            // 24-hour clock: 360 degrees / 24 hours = 15 degrees per hour
-            const hourAngle = (hours * 15) + (minutes * 0.25);
-            // Minute hand still does 360 degrees per 60 minutes = 6 degrees per minute
-            const minuteAngle = (minutes * 6);
+            // Check if current time in ET is peak
+            const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const etH = etNow.getHours();
+            const isPeak = etH >= 8 && etH < 14;
 
-            document.getElementById('hour-hand').setAttribute("transform", `rotate(${hourAngle} 100 100)`);
-            document.getElementById('minute-hand').setAttribute("transform", `rotate(${minuteAngle} 100 100)`);
-            
-            document.getElementById('time-display').textContent = 
-                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            if (!isPeak) {
+                statusDisplay.className = 'status-badge status-on';
+                statusDisplay.innerHTML = '🟢 2x Limit Active';
+                indicatorDot.style.background = '#4ade80';
+                indicatorDot.style.boxShadow = '0 0 10px #4ade80';
+            } else {
+                statusDisplay.className = 'status-badge status-off';
+                statusDisplay.innerHTML = '🟠 Normal Limits';
+                indicatorDot.style.background = '#f59e0b';
+                indicatorDot.style.boxShadow = '0 0 10px #f59e0b';
+            }
         }
 
-        createMarkers();
+        function calculate(timeZone, cityName) {
+            currentTimeZone = timeZone;
+            clockLocEl.textContent = cityName ? cityName.split(',')[0] + ' Time' : 'Local Time';
+            
+            const now = new Date();
+            // Calculate relative to ET (8 AM - 2 PM)
+            const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const localNow = new Date(now.toLocaleString('en-US', { timeZone }));
+            
+            const diffMs = localNow - etNow;
+            const diffH = diffMs / 3600000;
+
+            let peakStart = (8 + diffH + 24) % 24;
+            let peakEnd = (14 + diffH + 24) % 24;
+
+            let slots = [];
+            if (peakStart < peakEnd) {
+                if (peakStart > 0) slots.push(`00:00 – ${fmtH(peakStart)}`);
+                if (peakEnd < 24) slots.push(`${fmtH(peakEnd)} – 00:00`);
+            } else {
+                slots.push(`${fmtH(peakEnd)} – ${fmtH(peakStart)}`);
+            }
+
+            locLabel.innerText = cityName || timeZone.split('/').pop().replace(/_/g, ' ');
+            windowDisplay.innerHTML = slots.map(s => `<div class="time-slot">${s}</div>`).join('');
+            avoidDisplay.innerText = `${fmtH(peakStart)} – ${fmtH(peakEnd)}`;
+            
+            updateClock();
+        }
+
+        async function searchCities(query) {
+            if (query.length < 2) return;
+            auto.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:13px;">Searching...</div>';
+            auto.style.display = 'block';
+            try {
+                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8&language=en&format=json`);
+                const data = await res.json();
+                auto.innerHTML = '';
+                if (!data.results) {
+                    auto.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:13px;">No results</div>';
+                    return;
+                }
+                data.results.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-item';
+                    div.innerHTML = `<div class="city-name">${r.name}${r.admin1 ? ', ' + r.admin1 : ''}</div><div class="city-country">${r.country}</div>`;
+                    div.onclick = () => {
+                        const name = `${r.name}${r.admin1 ? ', ' + r.admin1 : ''}, ${r.country}`;
+                        search.value = name;
+                        auto.style.display = 'none';
+                        calculate(r.timezone, name);
+                    };
+                    auto.appendChild(div);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        search.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => searchCities(search.value.trim()), 300);
+        });
+
+        document.addEventListener('click', (e) => { if (!search.contains(e.target)) auto.style.display = 'none'; });
+        
         setInterval(updateClock, 1000);
-        updateClock();
+        window.onload = () => calculate(currentTimeZone, null);
     </script>
 </body>
 </html>
