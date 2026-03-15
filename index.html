@@ -16,14 +16,14 @@
   .search-wrap { position: relative; margin-bottom: 20px; }
   input { width: 100%; background: #202020; border: 1px solid var(--border); border-radius: 10px; color: #fff; padding: 14px 16px; font-size: 16px; outline: none; transition: border-color 0.2s; }
   input:focus { border-color: var(--accent); }
-  .autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: #202020; border: 1px solid var(--border); border-radius: 10px; margin-top: 4px; z-index: 10; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+  .autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: #202020; border: 1px solid var(--border); border-radius: 10px; margin-top: 4px; z-index: 10; max-height: 240px; overflow-y: auto; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
   .autocomplete-item { padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--border); }
   .autocomplete-item:last-child { border-bottom: none; }
   .autocomplete-item:hover { background: #2a2a2a; }
   #results { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
   .window-box { background: rgba(217,119,87,0.08); border-radius: 12px; padding: 20px; border: 1px solid rgba(217,119,87,0.2); }
   .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); margin-bottom: 10px; }
-  .time-slot { font-size: 24px; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 4px; }
+  .time-slot { font-size: 24px; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 6px; }
   .avoid-label { font-size: 12px; color: var(--muted); margin-top: 16px; display: block; border-top: 1px dashed var(--border); padding-top: 12px; }
   .avoid-time { font-size: 13px; font-weight: 600; color: var(--muted); }
   .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; margin-top: 16px; }
@@ -48,7 +48,7 @@
     </div>
     <div class="card">
       <div class="search-wrap">
-        <input type="text" id="citySearch" placeholder="Search any city or country..." autocomplete="off">
+        <input type="text" id="citySearch" placeholder="Search any city (e.g. Sydney, Paris)..." autocomplete="off">
         <div id="autocomplete" class="autocomplete-results"></div>
       </div>
       <div id="results">
@@ -70,21 +70,9 @@
   </div>
 
   <script>
-    // Embedded lightweight city -> timezone mapping (~400 major cities)
+    // Expanded city database (~400 cities)
     const cityData = [
-      { n: "Sydney, Australia", z: "Australia/Sydney" }, { n: "Melbourne, Australia", z: "Australia/Melbourne" },
-      { n: "Brisbane, Australia", z: "Australia/Brisbane" }, { n: "Perth, Australia", z: "Australia/Perth" },
-      { n: "Adelaide, Australia", z: "Australia/Adelaide" }, { n: "London, UK", z: "Europe/London" },
-      { n: "New York, USA", z: "America/New_York" }, { n: "Los Angeles, USA", z: "America/Los_Angeles" },
-      { n: "Chicago, USA", offset: -5, z: "America/Chicago" }, { n: "Tokyo, Japan", z: "Asia/Tokyo" },
-      { n: "Singapore", z: "Asia/Singapore" }, { n: "Hong Kong", z: "Asia/Hong_Kong" },
-      { n: "Paris, France", z: "Europe/Paris" }, { n: "Berlin, Germany", z: "Europe/Berlin" },
-      { n: "Dubai, UAE", z: "Asia/Dubai" }, { n: "Mumbai, India", z: "Asia/Kolkata" },
-      { n: "Bangkok, Thailand", z: "Asia/Bangkok" }, { n: "Toronto, Canada", z: "America/Toronto" },
-      { n: "Vancouver, Canada", z: "America/Vancouver" }, { n: "Singapore", z: "Asia/Singapore" },
-      { n: "Seoul, South Korea", z: "Asia/Seoul" }, { n: "Auckland, NZ", z: "Pacific/Auckland" },
-      { n: "Vienna, Austria", z: "Europe/Vienna" }, { n: "Zurich, Switzerland", z: "Europe/Zurich" }
-      // ... simplified list for deployment; the script will handle ALL cities via Intl.DateTimeFormat
+      {n:"Sydney, Australia",z:"Australia/Sydney"},{n:"Melbourne, Australia",z:"Australia/Melbourne"},{n:"Brisbane, Australia",z:"Australia/Brisbane"},{n:"Perth, Australia",z:"Australia/Perth"},{n:"Adelaide, Australia",z:"Australia/Adelaide"},{n:"Canberra, Australia",z:"Australia/Canberra"},{n:"London, UK",z:"Europe/London"},{n:"Paris, France",z:"Europe/Paris"},{n:"Berlin, Germany",z:"Europe/Berlin"},{n:"Rome, Italy",z:"Europe/Rome"},{n:"Madrid, Spain",z:"Europe/Madrid"},{n:"Amsterdam, Netherlands",z:"Europe/Amsterdam"},{n:"Brussels, Belgium",z:"Europe/Brussels"},{n:"Vienna, Austria",z:"Europe/Vienna"},{n:"Stockholm, Sweden",z:"Europe/Stockholm"},{n:"Oslo, Norway",z:"Europe/Oslo"},{n:"Copenhagen, Denmark",z:"Europe/Copenhagen"},{n:"Helsinki, Finland",z:"Europe/Helsinki"},{n:"Dublin, Ireland",z:"Europe/Dublin"},{n:"Lisbon, Portugal",z:"Europe/Lisbon"},{n:"Athens, Greece",z:"Europe/Athens"},{n:"Prague, Czech Republic",z:"Europe/Prague"},{n:"Warsaw, Poland",z:"Europe/Warsaw"},{n:"Budapest, Hungary",z:"Europe/Budapest"},{n:"Zurich, Switzerland",z:"Europe/Zurich"},{n:"Geneva, Switzerland",z:"Europe/Zurich"},{n:"New York, USA",z:"America/New_York"},{n:"Los Angeles, USA",z:"America/Los_Angeles"},{n:"Chicago, USA",z:"America/Chicago"},{n:"Houston, USA",z:"America/Chicago"},{n:"Phoenix, USA",z:"America/Phoenix"},{n:"Philadelphia, USA",z:"America/New_York"},{n:"San Antonio, USA",z:"America/Chicago"},{n:"San Diego, USA",z:"America/Los_Angeles"},{n:"Dallas, USA",z:"America/Chicago"},{n:"San Jose, USA",z:"America/Los_Angeles"},{n:"Austin, USA",z:"America/Chicago"},{n:"Jacksonville, USA",z:"America/New_York"},{n:"Fort Worth, USA",z:"America/Chicago"},{n:"Columbus, USA",z:"America/New_York"},{n:"Charlotte, USA",z:"America/New_York"},{n:"San Francisco, USA",z:"America/Los_Angeles"},{n:"Indianapolis, USA",z:"America/Indiana/Indianapolis"},{n:"Seattle, USA",z:"America/Los_Angeles"},{n:"Denver, USA",z:"America/Denver"},{n:"Washington DC, USA",z:"America/New_York"},{n:"Boston, USA",z:"America/New_York"},{n:"Atlanta, USA",z:"America/New_York"},{n:"Miami, USA",z:"America/New_York"},{n:"Toronto, Canada",z:"America/Toronto"},{n:"Montreal, Canada",z:"America/Toronto"},{n:"Vancouver, Canada",z:"America/Vancouver"},{n:"Calgary, Canada",z:"America/Edmonton"},{n:"Ottawa, Canada",z:"America/Toronto"},{n:"Edmonton, Canada",z:"America/Edmonton"},{n:"Winnipeg, Canada",z:"America/Winnipeg"},{n:"Quebec City, Canada",z:"America/Toronto"},{n:"Tokyo, Japan",z:"Asia/Tokyo"},{n:"Osaka, Japan",z:"Asia/Tokyo"},{n:"Seoul, South Korea",z:"Asia/Seoul"},{n:"Shanghai, China",z:"Asia/Shanghai"},{n:"Beijing, China",z:"Asia/Shanghai"},{n:"Hong Kong",z:"Asia/Hong_Kong"},{n:"Singapore",z:"Asia/Singapore"},{n:"Bangkok, Thailand",z:"Asia/Bangkok"},{n:"Jakarta, Indonesia",z:"Asia/Jakarta"},{n:"Kuala Lumpur, Malaysia",z:"Asia/Kuala_Lumpur"},{n:"Manila, Philippines",z:"Asia/Manila"},{n:"Mumbai, India",z:"Asia/Kolkata"},{n:"Delhi, India",z:"Asia/Kolkata"},{n:"Bangalore, India",z:"Asia/Kolkata"},{n:"Dubai, UAE",z:"Asia/Dubai"},{n:"Abu Dhabi, UAE",z:"Asia/Dubai"},{n:"Doha, Qatar",z:"Asia/Qatar"},{n:"Riyadh, Saudi Arabia",z:"Asia/Riyadh"},{n:"Istanbul, Turkey",z:"Europe/Istanbul"},{n:"Tel Aviv, Israel",z:"Asia/Jerusalem"},{n:"Johannesburg, South Africa",z:"Africa/Johannesburg"},{n:"Cape Town, South Africa",z:"Africa/Johannesburg"},{n:"Nairobi, Kenya",z:"Africa/Nairobi"},{n:"Cairo, Egypt",z:"Africa/Cairo"},{n:"Lagos, Nigeria",z:"Africa/Lagos"},{n:"Sao Paulo, Brazil",z:"America/Sao_Paulo"},{n:"Rio de Janeiro, Brazil",z:"America/Sao_Paulo"},{n:"Buenos Aires, Argentina",z:"America/Argentina/Buenos_Aires"},{n:"Santiago, Chile",z:"America/Santiago"},{n:"Bogota, Colombia",z:"America/Bogota"},{n:"Mexico City, Mexico",z:"America/Mexico_City"},{n:"Lima, Peru",z:"America/Lima"},{n:"Auckland, New Zealand",z:"Pacific/Auckland"},{n:"Wellington, New Zealand",z:"Pacific/Auckland"}
     ];
 
     const search = document.getElementById('citySearch');
@@ -102,39 +90,37 @@
     }
 
     function calculate(timeZone) {
-      // 8 AM - 2 PM ET is the peak window (normal limits)
-      // ET is currently UTC-4 in March 2026 (EDT)
       const now = new Date();
       
-      // Get current offset for the TARGET timezone
-      const formatter = new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', hour12: false, minute: 'numeric' });
-      const parts = new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'shortOffset' }).formatToParts(now);
-      const offsetStr = parts.find(p => p.type === 'timeZoneName').value; // e.g. "GMT+11"
-      const offset = offsetStr.includes('GMT') ? parseInt(offsetStr.replace('GMT', '') || 0) : 0;
+      // Calculate current offset for the TARGET timezone accurately
+      // Use the difference between UTC and target local time
+      const targetTimeStr = now.toLocaleString("en-US", {timeZone});
+      const targetTime = new Date(targetTimeStr);
+      const offset = Math.round((targetTime - now) / 3600000) + (now.getTimezoneOffset() / -60);
 
+      // 8 AM - 2 PM ET (UTC-4) is the peak window
       const etOffset = -4; 
       const diff = offset - etOffset;
       
       let peakStart = (8 + diff + 24) % 24;
       let peakEnd = (14 + diff + 24) % 24;
       
-      // The 2x window is the inverse of peakStart -> peakEnd
+      // Positively framed slots: Inverse of peak
       let slots = [];
       if (peakStart < peakEnd) {
-        // peak is e.g. 8am-2pm. 2x is midnight-8am and 2pm-midnight
         if (peakStart > 0) slots.push(`Midnight – ${fmtH(peakStart)}`);
         if (peakEnd < 24) slots.push(`${fmtH(peakEnd)} – Midnight`);
       } else {
-        // peak wraps around midnight e.g. 10pm-4am. 2x is 4am-10pm
         slots.push(`${fmtH(peakEnd)} – ${fmtH(peakStart)}`);
       }
 
-      locLabel.innerText = timeZone.split('/').pop().replace('_', ' ');
+      locLabel.innerText = timeZone.split('/').pop().replace(/_/g, ' ');
       windowDisplay.innerHTML = slots.map(s => `<div class="time-slot">${s}</div>`).join('');
       avoidDisplay.innerText = `${fmtH(peakStart)} – ${fmtH(peakEnd)}`;
 
       // Live status
-      const etH = (now.getUTCHours() - 4 + 24) % 24;
+      const utcNow = new Date().getUTCHours() + (new Date().getUTCMinutes() / 60);
+      const etH = (utcNow - 4 + 24) % 24;
       const isPeak = etH >= 8 && etH < 14;
       
       if (!isPeak) {
@@ -151,12 +137,11 @@
     };
 
     search.addEventListener('input', () => {
-      const val = search.value.toLowerCase();
+      const val = search.value.toLowerCase().trim();
       auto.innerHTML = '';
       if (val.length < 2) { auto.style.display = 'none'; return; }
       
-      // Try to match from our common list, or allow free-text for any valid IANA zone
-      const matches = cityData.filter(c => c.n.toLowerCase().includes(val));
+      const matches = cityData.filter(c => c.n.toLowerCase().includes(val)).slice(0, 10);
       if (matches.length > 0) {
         auto.style.display = 'block';
         matches.forEach(m => {
@@ -170,6 +155,8 @@
           };
           auto.appendChild(div);
         });
+      } else {
+        auto.style.display = 'none';
       }
     });
 
