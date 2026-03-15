@@ -20,6 +20,9 @@
   .autocomplete-item { padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--border); }
   .autocomplete-item:last-child { border-bottom: none; }
   .autocomplete-item:hover { background: #2a2a2a; }
+  .autocomplete-item .city-name { font-weight: 600; color: var(--text); }
+  .autocomplete-item .city-country { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .loading-indicator { font-size: 13px; color: var(--muted); padding: 12px 16px; }
   #results { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
   .window-box { background: rgba(217,119,87,0.08); border-radius: 12px; padding: 20px; border: 1px solid rgba(217,119,87,0.2); }
   .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); margin-bottom: 10px; }
@@ -38,6 +41,7 @@
   summary::after { content: '+'; color: var(--muted); font-size: 18px; transition: transform 0.2s; }
   details[open] summary::after { transform: rotate(45deg); }
   .content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .no-results { font-size: 13px; color: var(--muted); padding: 12px 16px; }
 </style>
 </head>
 <body>
@@ -56,7 +60,7 @@
         <div class="window-box">
           <div class="label">Use Claude 2x During</div>
           <div id="localWindow" class="time-container">--</div>
-          <div class="avoid-label">Avoid (Normal Limits)</div>
+          <span class="avoid-label">Avoid (Normal Limits)</span>
           <div id="avoidWindow" class="avoid-time">--</div>
         </div>
         <div id="status" class="status-badge"></div>
@@ -68,101 +72,112 @@
       <details><summary>Where does it apply?</summary><div class="content">Claude (web/desktop/mobile), Cowork, Claude Code, Excel, and PowerPoint.</div></details>
     </div>
   </div>
+<script>
+  const search = document.getElementById('citySearch');
+  const auto = document.getElementById('autocomplete');
+  const windowDisplay = document.getElementById('localWindow');
+  const avoidDisplay = document.getElementById('avoidWindow');
+  const statusDisplay = document.getElementById('status');
+  const locLabel = document.getElementById('locationLabel');
 
-  <script>
-    // Expanded city database (~400 cities)
-    const cityData = [
-      {n:"Sydney, Australia",z:"Australia/Sydney"},{n:"Melbourne, Australia",z:"Australia/Melbourne"},{n:"Brisbane, Australia",z:"Australia/Brisbane"},{n:"Perth, Australia",z:"Australia/Perth"},{n:"Adelaide, Australia",z:"Australia/Adelaide"},{n:"Canberra, Australia",z:"Australia/Canberra"},{n:"London, UK",z:"Europe/London"},{n:"Paris, France",z:"Europe/Paris"},{n:"Berlin, Germany",z:"Europe/Berlin"},{n:"Rome, Italy",z:"Europe/Rome"},{n:"Madrid, Spain",z:"Europe/Madrid"},{n:"Amsterdam, Netherlands",z:"Europe/Amsterdam"},{n:"Brussels, Belgium",z:"Europe/Brussels"},{n:"Vienna, Austria",z:"Europe/Vienna"},{n:"Stockholm, Sweden",z:"Europe/Stockholm"},{n:"Oslo, Norway",z:"Europe/Oslo"},{n:"Copenhagen, Denmark",z:"Europe/Copenhagen"},{n:"Helsinki, Finland",z:"Europe/Helsinki"},{n:"Dublin, Ireland",z:"Europe/Dublin"},{n:"Lisbon, Portugal",z:"Europe/Lisbon"},{n:"Athens, Greece",z:"Europe/Athens"},{n:"Prague, Czech Republic",z:"Europe/Prague"},{n:"Warsaw, Poland",z:"Europe/Warsaw"},{n:"Budapest, Hungary",z:"Europe/Budapest"},{n:"Zurich, Switzerland",z:"Europe/Zurich"},{n:"Geneva, Switzerland",z:"Europe/Zurich"},{n:"New York, USA",z:"America/New_York"},{n:"Los Angeles, USA",z:"America/Los_Angeles"},{n:"Chicago, USA",z:"America/Chicago"},{n:"Houston, USA",z:"America/Chicago"},{n:"Phoenix, USA",z:"America/Phoenix"},{n:"Philadelphia, USA",z:"America/New_York"},{n:"San Antonio, USA",z:"America/Chicago"},{n:"San Diego, USA",z:"America/Los_Angeles"},{n:"Dallas, USA",z:"America/Chicago"},{n:"San Jose, USA",z:"America/Los_Angeles"},{n:"Austin, USA",z:"America/Chicago"},{n:"Jacksonville, USA",z:"America/New_York"},{n:"Fort Worth, USA",z:"America/Chicago"},{n:"Columbus, USA",z:"America/New_York"},{n:"Charlotte, USA",z:"America/New_York"},{n:"San Francisco, USA",z:"America/Los_Angeles"},{n:"Indianapolis, USA",z:"America/Indiana/Indianapolis"},{n:"Seattle, USA",z:"America/Los_Angeles"},{n:"Denver, USA",z:"America/Denver"},{n:"Washington DC, USA",z:"America/New_York"},{n:"Boston, USA",z:"America/New_York"},{n:"Atlanta, USA",z:"America/New_York"},{n:"Miami, USA",z:"America/New_York"},{n:"Toronto, Canada",z:"America/Toronto"},{n:"Montreal, Canada",z:"America/Toronto"},{n:"Vancouver, Canada",z:"America/Vancouver"},{n:"Calgary, Canada",z:"America/Edmonton"},{n:"Ottawa, Canada",z:"America/Toronto"},{n:"Edmonton, Canada",z:"America/Edmonton"},{n:"Winnipeg, Canada",z:"America/Winnipeg"},{n:"Quebec City, Canada",z:"America/Toronto"},{n:"Tokyo, Japan",z:"Asia/Tokyo"},{n:"Osaka, Japan",z:"Asia/Tokyo"},{n:"Seoul, South Korea",z:"Asia/Seoul"},{n:"Shanghai, China",z:"Asia/Shanghai"},{n:"Beijing, China",z:"Asia/Shanghai"},{n:"Hong Kong",z:"Asia/Hong_Kong"},{n:"Singapore",z:"Asia/Singapore"},{n:"Bangkok, Thailand",z:"Asia/Bangkok"},{n:"Jakarta, Indonesia",z:"Asia/Jakarta"},{n:"Kuala Lumpur, Malaysia",z:"Asia/Kuala_Lumpur"},{n:"Manila, Philippines",z:"Asia/Manila"},{n:"Mumbai, India",z:"Asia/Kolkata"},{n:"Delhi, India",z:"Asia/Kolkata"},{n:"Bangalore, India",z:"Asia/Kolkata"},{n:"Dubai, UAE",z:"Asia/Dubai"},{n:"Abu Dhabi, UAE",z:"Asia/Dubai"},{n:"Doha, Qatar",z:"Asia/Qatar"},{n:"Riyadh, Saudi Arabia",z:"Asia/Riyadh"},{n:"Istanbul, Turkey",z:"Europe/Istanbul"},{n:"Tel Aviv, Israel",z:"Asia/Jerusalem"},{n:"Johannesburg, South Africa",z:"Africa/Johannesburg"},{n:"Cape Town, South Africa",z:"Africa/Johannesburg"},{n:"Nairobi, Kenya",z:"Africa/Nairobi"},{n:"Cairo, Egypt",z:"Africa/Cairo"},{n:"Lagos, Nigeria",z:"Africa/Lagos"},{n:"Sao Paulo, Brazil",z:"America/Sao_Paulo"},{n:"Rio de Janeiro, Brazil",z:"America/Sao_Paulo"},{n:"Buenos Aires, Argentina",z:"America/Argentina/Buenos_Aires"},{n:"Santiago, Chile",z:"America/Santiago"},{n:"Bogota, Colombia",z:"America/Bogota"},{n:"Mexico City, Mexico",z:"America/Mexico_City"},{n:"Lima, Peru",z:"America/Lima"},{n:"Auckland, New Zealand",z:"Pacific/Auckland"},{n:"Wellington, New Zealand",z:"Pacific/Auckland"}
-    ];
+  let debounceTimer = null;
 
-    const search = document.getElementById('citySearch');
-    const auto = document.getElementById('autocomplete');
-    const windowDisplay = document.getElementById('localWindow');
-    const avoidDisplay = document.getElementById('avoidWindow');
-    const statusDisplay = document.getElementById('status');
-    const locLabel = document.getElementById('locationLabel');
+  function fmtH(h) {
+    const hh = Math.floor(h);
+    const ampm = hh >= 12 ? 'PM' : 'AM';
+    const h12 = hh % 12 || 12;
+    return `${h12} ${ampm}`;
+  }
 
-    function fmtH(h) {
-      const hh = Math.floor(h);
-      const ampm = hh >= 12 ? 'PM' : 'AM';
-      const h12 = hh % 12 || 12;
-      return `${h12} ${ampm}`;
+  function calculate(timeZone, cityName) {
+    const now = new Date();
+    const targetTimeStr = now.toLocaleString('en-US', { timeZone });
+    const targetTime = new Date(targetTimeStr);
+    const offset = Math.round((targetTime - now) / 3600000) + (now.getTimezoneOffset() / -60);
+    const etOffset = -4;
+    const diff = offset - etOffset;
+    let peakStart = (8 + diff + 24) % 24;
+    let peakEnd = (14 + diff + 24) % 24;
+    let slots = [];
+    if (peakStart < peakEnd) {
+      if (peakStart > 0) slots.push(`Midnight – ${fmtH(peakStart)}`);
+      if (peakEnd < 24) slots.push(`${fmtH(peakEnd)} – Midnight`);
+    } else {
+      slots.push(`${fmtH(peakEnd)} – ${fmtH(peakStart)}`);
     }
-
-    function calculate(timeZone) {
-      const now = new Date();
-      
-      // Calculate current offset for the TARGET timezone accurately
-      // Use the difference between UTC and target local time
-      const targetTimeStr = now.toLocaleString("en-US", {timeZone});
-      const targetTime = new Date(targetTimeStr);
-      const offset = Math.round((targetTime - now) / 3600000) + (now.getTimezoneOffset() / -60);
-
-      // 8 AM - 2 PM ET (UTC-4) is the peak window
-      const etOffset = -4; 
-      const diff = offset - etOffset;
-      
-      let peakStart = (8 + diff + 24) % 24;
-      let peakEnd = (14 + diff + 24) % 24;
-      
-      // Positively framed slots: Inverse of peak
-      let slots = [];
-      if (peakStart < peakEnd) {
-        if (peakStart > 0) slots.push(`Midnight – ${fmtH(peakStart)}`);
-        if (peakEnd < 24) slots.push(`${fmtH(peakEnd)} – Midnight`);
-      } else {
-        slots.push(`${fmtH(peakEnd)} – ${fmtH(peakStart)}`);
-      }
-
-      locLabel.innerText = timeZone.split('/').pop().replace(/_/g, ' ');
-      windowDisplay.innerHTML = slots.map(s => `<div class="time-slot">${s}</div>`).join('');
-      avoidDisplay.innerText = `${fmtH(peakStart)} – ${fmtH(peakEnd)}`;
-
-      // Live status
-      const utcNow = new Date().getUTCHours() + (new Date().getUTCMinutes() / 60);
-      const etH = (utcNow - 4 + 24) % 24;
-      const isPeak = etH >= 8 && etH < 14;
-      
-      if (!isPeak) {
-        statusDisplay.className = "status-badge status-on";
-        statusDisplay.innerHTML = `<div class="dot dot-on"></div> 2x Limit Currently Active`;
-      } else {
-        statusDisplay.className = "status-badge status-off";
-        statusDisplay.innerHTML = `<div class="dot"></div> Normal Usage Mode`;
-      }
+    locLabel.innerText = cityName || timeZone.split('/').pop().replace(/_/g, ' ');
+    windowDisplay.innerHTML = slots.map(s => `<div class="time-slot">${s}</div>`).join('');
+    avoidDisplay.innerText = `${fmtH(peakStart)} – ${fmtH(peakEnd)}`;
+    const utcNow = new Date().getUTCHours() + (new Date().getUTCMinutes() / 60);
+    const etH = (utcNow - 4 + 24) % 24;
+    const isPeak = etH >= 8 && etH < 14;
+    if (!isPeak) {
+      statusDisplay.className = 'status-badge status-on';
+      statusDisplay.innerHTML = '<div class="dot dot-on"></div> 2x Limit Currently Active';
+    } else {
+      statusDisplay.className = 'status-badge status-off';
+      statusDisplay.innerHTML = '<div class="dot"></div> Normal Usage Mode';
     }
+  }
 
-    window.onload = () => {
-      calculate(Intl.DateTimeFormat().resolvedOptions().timeZone);
-    };
-
-    search.addEventListener('input', () => {
-      const val = search.value.toLowerCase().trim();
+  async function searchCities(query) {
+    if (query.length < 2) {
+      auto.style.display = 'none';
+      return;
+    }
+    auto.innerHTML = '<div class="loading-indicator">Searching...</div>';
+    auto.style.display = 'block';
+    try {
+      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8&language=en&format=json`);
+      const data = await res.json();
       auto.innerHTML = '';
-      if (val.length < 2) { auto.style.display = 'none'; return; }
-      
-      const matches = cityData.filter(c => c.n.toLowerCase().includes(val)).slice(0, 10);
-      if (matches.length > 0) {
+      if (!data.results || data.results.length === 0) {
+        auto.innerHTML = '<div class="no-results">No cities found. Try a different spelling.</div>';
         auto.style.display = 'block';
-        matches.forEach(m => {
-          const div = document.createElement('div');
-          div.className = 'autocomplete-item';
-          div.innerText = m.n;
-          div.onclick = () => {
-            calculate(m.z);
-            search.value = m.n;
-            auto.style.display = 'none';
-          };
-          auto.appendChild(div);
-        });
-      } else {
-        auto.style.display = 'none';
+        return;
       }
-    });
+      data.results.forEach(r => {
+        const tz = r.timezone;
+        if (!tz) return;
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        const country = r.country || '';
+        const admin = r.admin1 ? `, ${r.admin1}` : '';
+        div.innerHTML = `<div class="city-name">${r.name}${admin}</div><div class="city-country">${country}</div>`;
+        div.onclick = () => {
+          const displayName = `${r.name}${admin}, ${country}`;
+          calculate(tz, displayName);
+          search.value = displayName;
+          auto.style.display = 'none';
+        };
+        auto.appendChild(div);
+      });
+      auto.style.display = 'block';
+    } catch (e) {
+      auto.innerHTML = '<div class="no-results">Error fetching results. Check your connection.</div>';
+      auto.style.display = 'block';
+    }
+  }
 
-    document.addEventListener('click', (e) => {
-      if (!search.contains(e.target)) auto.style.display = 'none';
-    });
-  </script>
+  window.onload = () => {
+    calculate(Intl.DateTimeFormat().resolvedOptions().timeZone, null);
+  };
+
+  search.addEventListener('input', () => {
+    const val = search.value.trim();
+    clearTimeout(debounceTimer);
+    if (val.length < 2) {
+      auto.style.display = 'none';
+      return;
+    }
+    debounceTimer = setTimeout(() => searchCities(val), 300);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!search.contains(e.target) && !auto.contains(e.target)) {
+      auto.style.display = 'none';
+    }
+  });
+</script>
 </body>
 </html>
