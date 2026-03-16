@@ -270,17 +270,32 @@
             stroke-linecap: round;
             transition: transform 0.8s cubic-bezier(0.4, 2.08, 0.55, 0.44);
         }
-        .hour-hand { stroke: var(--text); stroke-width: 5; filter: url(#handGlow); }
+        .hour-hand-shape {
+            fill: var(--text);
+            filter: url(#handGlow);
+            transition: transform 0.8s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+        }
         .minute-hand { stroke: #fbbf24; stroke-width: 2.5; filter: url(#handGlow); }
-        .second-hand {
+        .second-hand-group {
+            transition: transform 1s linear;
+        }
+        .second-hand-line {
             stroke: var(--accent);
             stroke-width: 1.5;
             stroke-linecap: round;
-            transition: none;
+        }
+        .second-hand-tail {
+            stroke: var(--accent);
+            stroke-width: 1.5;
+            stroke-linecap: round;
+        }
+        .second-hand-dot {
+            fill: var(--accent);
         }
         .usage-arc {
             fill: none;
             stroke-width: 5;
+            stroke-linecap: round;
             opacity: 0.4;
             filter: url(#arcGlow);
         }
@@ -288,15 +303,48 @@
             stroke-width: 8;
             opacity: 0.7;
             filter: url(#arcGlowStrong);
+            animation: arcPulse 3s ease-in-out infinite;
+        }
+        @keyframes arcPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.85; }
+        }
+        .clock-ring {
+            fill: none;
+            stroke: rgba(139, 92, 246, 0.06);
+            stroke-width: 0.5;
+        }
+        .clock-ring-spin {
+            fill: none;
+            stroke: rgba(139, 92, 246, 0.08);
+            stroke-width: 0.5;
+            stroke-dasharray: 4 8;
+            animation: slowSpin 120s linear infinite;
+            transform-origin: 100px 100px;
+        }
+        @keyframes slowSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .current-hour-dot {
+            fill: #fff;
+            filter: url(#arcGlowStrong);
+            transition: cx 1s ease, cy 1s ease;
         }
         .marker { stroke: rgba(139, 92, 246, 0.25); stroke-width: 1; }
         .marker.major { stroke: #e8e6f0; stroke-width: 2; }
+        .marker-dot {
+            fill: rgba(139, 92, 246, 0.3);
+        }
         .marker-text {
             font-size: 12px;
             font-weight: 700;
             font-family: 'Inter', sans-serif;
             fill: #e8e6f0;
             text-anchor: middle;
+        }
+        .marker-text.anchor {
+            font-size: 13px;
         }
         .marker-text.off-peak {
             fill: #4ade80;
@@ -501,13 +549,32 @@
                             </feMerge>
                         </filter>
                     </defs>
+                    <!-- Outer glow ring -->
+                    <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(139,92,246,0.08)" stroke-width="1" filter="url(#arcGlow)"/>
+                    <!-- Main clock face -->
                     <circle cx="100" cy="100" r="92" fill="url(#clockBg)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+                    <!-- Inner shadow ring -->
+                    <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="3"/>
+                    <!-- Concentric decorative rings -->
+                    <circle cx="100" cy="100" r="70" class="clock-ring"/>
+                    <circle cx="100" cy="100" r="55" class="clock-ring-spin"/>
+                    <circle cx="100" cy="100" r="40" class="clock-ring"/>
                     <g id="arcs"></g>
+                    <!-- Current hour indicator -->
+                    <circle id="current-hour-dot" class="current-hour-dot" cx="100" cy="11" r="3"/>
                     <g id="markers"></g>
-                    <line id="hour-hand" class="hand hour-hand" x1="100" y1="100" x2="100" y2="45" />
+                    <!-- Hour hand (tapered polygon) -->
+                    <polygon id="hour-hand" class="hour-hand-shape" points="97,100 100,45 103,100"/>
+                    <!-- Minute hand -->
                     <line id="minute-hand" class="hand minute-hand" x1="100" y1="100" x2="100" y2="35" />
-                    <line id="second-hand" class="second-hand" x1="100" y1="100" x2="100" y2="30" />
-                    <circle cx="100" cy="100" r="4" fill="var(--accent)" filter="url(#handGlow)" />
+                    <!-- Second hand with counterweight -->
+                    <g id="second-hand" class="second-hand-group">
+                        <line x1="100" y1="115" x2="100" y2="30" class="second-hand-line"/>
+                        <circle cx="100" cy="115" r="2.5" class="second-hand-dot"/>
+                    </g>
+                    <!-- Layered center hub -->
+                    <circle cx="100" cy="100" r="6" fill="none" stroke="rgba(139,92,246,0.3)" stroke-width="1"/>
+                    <circle cx="100" cy="100" r="3" fill="var(--accent)" filter="url(#handGlow)"/>
                 </svg>
             </div>
 
@@ -589,25 +656,37 @@
             for (let i = 0; i < 24; i++) {
                 const angle = i * 15;
                 const isMajor = i % 3 === 0;
-                const length = isMajor ? 8 : 4;
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("class", `marker ${isMajor ? 'major' : ''}`);
-                line.setAttribute("x1", "100");
-                line.setAttribute("y1", "18");
-                line.setAttribute("x2", "100");
-                line.setAttribute("y2", 18 + length);
-                line.setAttribute("transform", `rotate(${angle} 100 100)`);
-                markers.appendChild(line);
 
                 if (isMajor) {
+                    // Major tick lines
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("class", "marker major");
+                    line.setAttribute("x1", "100");
+                    line.setAttribute("y1", "18");
+                    line.setAttribute("x2", "100");
+                    line.setAttribute("y2", "26");
+                    line.setAttribute("transform", `rotate(${angle} 100 100)`);
+                    markers.appendChild(line);
+
+                    // Number labels
                     const text = polarToCartesian(100, 100, 62, angle);
                     const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    textEl.setAttribute("class", "marker-text");
+                    const isAnchor = (i === 0 || i === 12);
+                    textEl.setAttribute("class", `marker-text${isAnchor ? ' anchor' : ''}`);
                     textEl.setAttribute("x", text.x);
                     textEl.setAttribute("y", text.y + 4);
                     textEl.textContent = i;
                     markers.appendChild(textEl);
                     markerTextEls.push({ el: textEl, hour: i });
+                } else {
+                    // Minor ticks as dots
+                    const pos = polarToCartesian(100, 100, 80, angle);
+                    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("class", "marker-dot");
+                    dot.setAttribute("cx", pos.x);
+                    dot.setAttribute("cy", pos.y);
+                    dot.setAttribute("r", "1.5");
+                    markers.appendChild(dot);
                 }
             }
         }
@@ -650,6 +729,13 @@
             document.getElementById('hour-hand').setAttribute("transform", `rotate(${hourAngle} 100 100)`);
             document.getElementById('minute-hand').setAttribute("transform", `rotate(${minuteAngle} 100 100)`);
             document.getElementById('second-hand').setAttribute("transform", `rotate(${secondAngle} 100 100)`);
+
+            // Position current-hour indicator dot on the arc
+            const currentAngle = hourAngle;
+            const dotPos = polarToCartesian(100, 100, 89, currentAngle);
+            const dot = document.getElementById('current-hour-dot');
+            dot.setAttribute("cx", dotPos.x);
+            dot.setAttribute("cy", dotPos.y);
 
             clockEl.textContent = localTime.toLocaleTimeString('en-GB', {
                 hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
