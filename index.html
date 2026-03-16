@@ -4,49 +4,131 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claude 2x Hours Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0b0b0b;
-            --surface: #151515;
-            --border: #262626;
+            --bg: #0a0a14;
+            --surface: #12121e;
+            --surface-glass: rgba(18, 18, 30, 0.6);
+            --border: rgba(139, 92, 246, 0.12);
+            --border-hover: rgba(139, 92, 246, 0.3);
             --accent: #d97757;
-            --text: #f5f5f5;
-            --muted: #737373;
+            --accent-glow: rgba(217, 119, 87, 0.25);
+            --text: #f0eef6;
+            --muted: #6b6b8a;
             --green: #4ade80;
+            --green-glow: rgba(74, 222, 128, 0.15);
             --orange: #f59e0b;
-            --red: #ff4b4b;
+            --red: #ff6b6b;
+            --red-glow: rgba(255, 75, 75, 0.15);
+            --violet: #8b5cf6;
+            --violet-glow: rgba(139, 92, 246, 0.15);
+            --mouse-x: 50%;
+            --mouse-y: 50%;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background: var(--bg);
+            background-image:
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
             color: var(--text);
-            font-family: -apple-system, system-ui, sans-serif;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 40px 20px;
             min-height: 100vh;
         }
-        .container { width: 100%; max-width: 480px; }
-        .header { text-align: center; margin-bottom: 32px; }
-        h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+
+        /* Cursor-following gradient */
+        #cursor-glow {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(700px circle at var(--mouse-x) var(--mouse-y), rgba(167, 139, 250, 0.15), transparent 60%);
+            transition: background 0.15s ease;
+        }
+        @media (hover: none) {
+            #cursor-glow { display: none; }
+        }
+
+        .container { width: 100%; max-width: 480px; position: relative; z-index: 1; }
+
+        /* Page load animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+        }
+        @keyframes dropdownSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes glowPulse {
+            0%, 100% { filter: url(#glow); }
+            50% { filter: url(#glowStrong); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: fadeInUp 0.6s ease-out 0.1s both;
+        }
+        h1 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--text) 0%, var(--violet) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
         p.sub { color: var(--muted); font-size: 15px; }
 
         .clock-section {
+            position: relative;
             text-align: center;
             margin-bottom: 24px;
-            background: var(--surface);
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+        .clock-section::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 17px;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%);
+            pointer-events: none;
         }
         .digital-clock {
-            font-size: 42px;
-            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 44px;
+            font-weight: 700;
             font-variant-numeric: tabular-nums;
-            letter-spacing: -1px;
+            letter-spacing: -0.5px;
             margin-bottom: 4px;
+            background: linear-gradient(135deg, var(--text) 0%, var(--muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .clock-label {
             font-size: 11px;
@@ -57,38 +139,105 @@
         }
 
         .card {
-            background: var(--surface);
+            position: relative;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03);
             margin-bottom: 24px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            animation: fadeInUp 0.6s ease-out 0.3s both;
         }
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 17px;
+            background: radial-gradient(ellipse at 50% 0%, var(--violet-glow), transparent 70%);
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0.5;
+        }
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 17px;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+            border-color: var(--border-hover);
+        }
+
         .search-wrap { position: relative; margin-bottom: 24px; }
+        .search-wrap::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--muted);
+            border-radius: 50%;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .search-wrap::after {
+            content: '';
+            position: absolute;
+            left: 29px;
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
+            width: 0;
+            height: 6px;
+            border-left: 2px solid var(--muted);
+            margin-top: 8px;
+            z-index: 2;
+            pointer-events: none;
+        }
         input {
             width: 100%;
-            background: #202020;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            color: #fff;
-            padding: 14px 16px;
-            font-size: 16px;
+            border-radius: 12px;
+            color: var(--text);
+            padding: 14px 16px 14px 44px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
-        input:focus { border-color: var(--accent); }
+        input:focus {
+            border-color: var(--violet);
+            box-shadow: 0 0 0 3px var(--violet-glow), 0 0 20px var(--violet-glow);
+        }
+        input::placeholder {
+            color: var(--muted);
+            opacity: 0.7;
+        }
         .autocomplete-results {
             position: absolute;
             top: 100%; left: 0; right: 0;
-            background: #202020;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 12px;
             margin-top: 4px;
             z-index: 10;
             max-height: 240px;
             overflow-y: auto;
             display: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+            animation: dropdownSlideIn 0.2s ease-out;
         }
         .autocomplete-item {
             padding: 12px 16px;
@@ -96,8 +245,13 @@
             font-size: 14px;
             border-bottom: 1px solid var(--border);
             text-align: left;
+            transition: background 0.15s ease, padding-left 0.15s ease;
         }
-        .autocomplete-item:hover { background: #2a2a2a; }
+        .autocomplete-item:hover {
+            background: rgba(139, 92, 246, 0.08);
+            padding-left: 20px;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
         .autocomplete-item .city-name { font-weight: 600; color: var(--text); }
         .autocomplete-item .city-country { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
@@ -114,22 +268,102 @@
         }
         .hand {
             stroke-linecap: round;
-            transition: transform 0.5s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+            transition: transform 0.8s cubic-bezier(0.4, 2.08, 0.55, 0.44);
         }
-        .hour-hand { stroke: var(--text); stroke-width: 4; }
-        .minute-hand { stroke: var(--muted); stroke-width: 2; }
+        .hour-hand-shape {
+            fill: var(--text);
+            filter: url(#handGlow);
+            transition: transform 0.8s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+        }
+        .minute-hand { stroke: #fbbf24; stroke-width: 2.5; filter: url(#handGlow); }
+        .second-hand-group {
+            transition: transform 1s linear;
+        }
+        .second-hand-line {
+            stroke: var(--accent);
+            stroke-width: 1.5;
+            stroke-linecap: round;
+        }
+        .second-hand-tail {
+            stroke: var(--accent);
+            stroke-width: 1.5;
+            stroke-linecap: round;
+        }
+        .second-hand-dot {
+            fill: var(--accent);
+        }
         .usage-arc {
             fill: none;
-            stroke-width: 12;
-            opacity: 0.3;
+            stroke-width: 10;
+            stroke-linecap: round;
+            opacity: 0.55;
+            filter: url(#arcGlow);
         }
-        .marker { stroke: var(--border); stroke-width: 1; }
-        .marker.major { stroke: var(--muted); stroke-width: 2; }
-        .marker-text {
-            font-size: 9px;
+        .usage-arc.neon {
+            stroke-width: 14;
+            opacity: 0.7;
+            filter: url(#arcGlowStrong);
+            animation: arcPulse 3s ease-in-out infinite;
+        }
+        .arc-endpoint {
+            fill: #4ade80;
+            filter: url(#arcGlowStrong);
+        }
+        .arc-endpoint-label {
+            fill: #fff;
+            font-size: 7px;
             font-weight: 700;
-            fill: var(--muted);
             text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+        }
+        @keyframes arcPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.85; }
+        }
+        .clock-ring {
+            fill: none;
+            stroke: rgba(139, 92, 246, 0.06);
+            stroke-width: 0.5;
+        }
+        .clock-ring-spin {
+            fill: none;
+            stroke: rgba(139, 92, 246, 0.08);
+            stroke-width: 0.5;
+            stroke-dasharray: 4 8;
+            animation: slowSpin 120s linear infinite;
+            transform-origin: 100px 100px;
+        }
+        @keyframes slowSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .current-hour-dot {
+            fill: #fff;
+            filter: url(#arcGlowStrong);
+            transition: cx 1s ease, cy 1s ease;
+        }
+        .marker { stroke: rgba(139, 92, 246, 0.25); stroke-width: 1; }
+        .marker.major { stroke: #e8e6f0; stroke-width: 2; }
+        .marker-dot {
+            fill: rgba(139, 92, 246, 0.3);
+        }
+        .marker-text {
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            fill: #e8e6f0;
+            text-anchor: middle;
+        }
+        .marker-text.anchor {
+            font-size: 13px;
+        }
+        .marker-text.off-peak {
+            fill: #4ade80;
+            filter: url(#arcGlowStrong);
+        }
+        .marker-text.peak {
+            fill: var(--muted);
         }
 
         #results {
@@ -138,10 +372,13 @@
             border-top: 1px solid var(--border);
         }
         .window-box {
-            background: rgba(217,119,87,0.08);
+            background: rgba(217,119,87,0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 12px;
             padding: 20px;
-            border: 1px solid rgba(217,119,87,0.2);
+            border: 1px solid rgba(217,119,87,0.15);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
             position: relative;
             text-align: left;
         }
@@ -152,6 +389,7 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
         }
         .label {
             font-size: 11px;
@@ -176,20 +414,53 @@
             gap: 6px;
             font-size: 12px;
             font-weight: 600;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 99px;
             margin-top: 16px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
         }
-        .status-on { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
-        .status-off { background: rgba(245,158,11,0.1); color: var(--orange); border: 1px solid rgba(245,158,11,0.2); }
+        .status-on {
+            background: rgba(74,222,128,0.08);
+            color: var(--green);
+            border: 1px solid rgba(74,222,128,0.2);
+            box-shadow: 0 0 20px rgba(74,222,128,0.1);
+        }
+        .status-off {
+            background: rgba(245,158,11,0.08);
+            color: var(--orange);
+            border: 1px solid rgba(245,158,11,0.2);
+            box-shadow: 0 0 20px rgba(245,158,11,0.1);
+        }
 
-        .faq { width: 100%; margin-top: 12px; }
+        .faq {
+            width: 100%;
+            margin-top: 12px;
+            animation: fadeInUp 0.6s ease-out 0.4s both;
+        }
         details {
-            background: var(--surface);
+            position: relative;
+            background: var(--surface-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border);
             margin-bottom: 10px;
             border-radius: 12px;
             overflow: hidden;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        details::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 13px;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%);
+            pointer-events: none;
+        }
+        details[open] {
+            border-color: var(--border-hover);
+            box-shadow: 0 0 20px var(--violet-glow);
         }
         summary {
             padding: 16px;
@@ -199,11 +470,51 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: color 0.2s ease;
+            list-style: none;
         }
-        .faq-content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; text-align: left; }
+        summary::-webkit-details-marker { display: none; }
+        summary::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid var(--muted);
+            border-bottom: 2px solid var(--muted);
+            transform: rotate(-45deg);
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+        details[open] summary::after {
+            transform: rotate(45deg);
+        }
+        summary:hover { color: var(--violet); }
+        summary:hover::after { border-color: var(--violet); }
+        .faq-content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; text-align: left; letter-spacing: 0.02em; }
+
+        /* Mobile-first responsiveness */
+        @media (max-width: 400px) {
+            body { padding: 24px 16px; }
+            .digital-clock { font-size: 36px; }
+        }
+        @media (hover: none) {
+            .clock-section::after,
+            .card::after,
+            details::after { display: none; }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            #cursor-glow { display: none; }
+        }
     </style>
 </head>
 <body>
+    <div id="cursor-glow"></div>
     <div class="container">
         <div class="header">
             <h1>Claude 2x</h1>
@@ -223,11 +534,59 @@
 
             <div id="analog-clock-wrap">
                 <svg id="clock-face" viewBox="0 0 200 200">
+                    <defs>
+                        <radialGradient id="clockBg" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#16162a"/>
+                            <stop offset="100%" stop-color="#0e0e1a"/>
+                        </radialGradient>
+                        <filter id="arcGlow">
+                            <feGaussianBlur stdDeviation="3" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        <filter id="arcGlowStrong">
+                            <feGaussianBlur stdDeviation="5" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        <filter id="handGlow">
+                            <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <!-- Outer glow ring -->
+                    <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(139,92,246,0.08)" stroke-width="1" filter="url(#arcGlow)"/>
+                    <!-- Main clock face -->
+                    <circle cx="100" cy="100" r="92" fill="url(#clockBg)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+                    <!-- Inner shadow ring -->
+                    <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="3"/>
+                    <!-- Concentric decorative rings -->
+                    <circle cx="100" cy="100" r="70" class="clock-ring"/>
+                    <circle cx="100" cy="100" r="55" class="clock-ring-spin"/>
+                    <circle cx="100" cy="100" r="40" class="clock-ring"/>
                     <g id="arcs"></g>
+                    <!-- Current hour indicator -->
+                    <circle id="current-hour-dot" class="current-hour-dot" cx="100" cy="11" r="3"/>
                     <g id="markers"></g>
-                    <line id="hour-hand" class="hand hour-hand" x1="100" y1="100" x2="100" y2="45" />
+                    <!-- Hour hand (tapered polygon) -->
+                    <polygon id="hour-hand" class="hour-hand-shape" points="97,100 100,45 103,100"/>
+                    <!-- Minute hand -->
                     <line id="minute-hand" class="hand minute-hand" x1="100" y1="100" x2="100" y2="35" />
-                    <circle cx="100" cy="100" r="3" fill="var(--text)" />
+                    <!-- Second hand with counterweight -->
+                    <g id="second-hand" class="second-hand-group">
+                        <line x1="100" y1="115" x2="100" y2="30" class="second-hand-line"/>
+                        <circle cx="100" cy="115" r="2.5" class="second-hand-dot"/>
+                    </g>
+                    <!-- Layered center hub -->
+                    <circle cx="100" cy="100" r="6" fill="none" stroke="rgba(139,92,246,0.3)" stroke-width="1"/>
+                    <circle cx="100" cy="100" r="3" fill="var(--accent)" filter="url(#handGlow)"/>
                 </svg>
             </div>
 
@@ -257,6 +616,18 @@
     </div>
 
     <script>
+        // Cursor-following gradient
+        let rafPending = false;
+        document.addEventListener('mousemove', (e) => {
+            if (rafPending) return;
+            rafPending = true;
+            requestAnimationFrame(() => {
+                document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
+                document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
+                rafPending = false;
+            });
+        });
+
         const search = document.getElementById('citySearch');
         const auto = document.getElementById('autocomplete');
         const clockEl = document.getElementById('digitalClock');
@@ -285,36 +656,69 @@
             const arcLength = (endAngle - startAngle + 360) % 360;
             const largeArcFlag = arcLength <= 180 ? "0" : "1";
             return [
-                "M", start.x, start.y, 
+                "M", start.x, start.y,
                 "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
             ].join(" ");
         }
+
+        const markerTextEls = [];
 
         function createMarkers() {
             const markers = document.getElementById('markers');
             for (let i = 0; i < 24; i++) {
                 const angle = i * 15;
                 const isMajor = i % 3 === 0;
-                const length = isMajor ? 8 : 4;
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("class", `marker ${isMajor ? 'major' : ''}`);
-                line.setAttribute("x1", "100");
-                line.setAttribute("y1", "25");
-                line.setAttribute("x2", "100");
-                line.setAttribute("y2", 25 + length);
-                line.setAttribute("transform", `rotate(${angle} 100 100)`);
-                markers.appendChild(line);
 
                 if (isMajor) {
-                    const text = polarToCartesian(100, 100, 88, angle);
+                    // Major tick lines
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("class", "marker major");
+                    line.setAttribute("x1", "100");
+                    line.setAttribute("y1", "18");
+                    line.setAttribute("x2", "100");
+                    line.setAttribute("y2", "26");
+                    line.setAttribute("transform", `rotate(${angle} 100 100)`);
+                    markers.appendChild(line);
+
+                    // Number labels
+                    const text = polarToCartesian(100, 100, 62, angle);
                     const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    textEl.setAttribute("class", "marker-text");
+                    const isAnchor = (i === 0 || i === 12);
+                    textEl.setAttribute("class", `marker-text${isAnchor ? ' anchor' : ''}`);
                     textEl.setAttribute("x", text.x);
-                    textEl.setAttribute("y", text.y + 3);
+                    textEl.setAttribute("y", text.y + 4);
                     textEl.textContent = i;
                     markers.appendChild(textEl);
+                    markerTextEls.push({ el: textEl, hour: i });
+                } else {
+                    // Minor ticks as dots
+                    const pos = polarToCartesian(100, 100, 80, angle);
+                    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("class", "marker-dot");
+                    dot.setAttribute("cx", pos.x);
+                    dot.setAttribute("cy", pos.y);
+                    dot.setAttribute("r", "1.5");
+                    markers.appendChild(dot);
                 }
             }
+        }
+
+        function isHourInPeak(hour, peakStart, peakEnd) {
+            if (peakStart < peakEnd) {
+                return hour >= peakStart && hour < peakEnd;
+            } else {
+                return hour >= peakStart || hour < peakEnd;
+            }
+        }
+
+        function updateMarkerColors(peakStart, peakEnd) {
+            markerTextEls.forEach(({ el, hour }) => {
+                if (isHourInPeak(hour, peakStart, peakEnd)) {
+                    el.setAttribute("class", "marker-text peak");
+                } else {
+                    el.setAttribute("class", "marker-text off-peak");
+                }
+            });
         }
 
         function fmtH(h) {
@@ -333,17 +737,26 @@
 
             const hourAngle = (hours * 15) + (minutes * 0.25);
             const minuteAngle = (minutes * 6);
+            const secondAngle = (seconds * 6);
             document.getElementById('hour-hand').setAttribute("transform", `rotate(${hourAngle} 100 100)`);
             document.getElementById('minute-hand').setAttribute("transform", `rotate(${minuteAngle} 100 100)`);
+            document.getElementById('second-hand').setAttribute("transform", `rotate(${secondAngle} 100 100)`);
 
-            clockEl.textContent = localTime.toLocaleTimeString('en-GB', { 
+            // Position current-hour indicator dot on the arc
+            const currentAngle = hourAngle;
+            const dotPos = polarToCartesian(100, 100, 89, currentAngle);
+            const dot = document.getElementById('current-hour-dot');
+            dot.setAttribute("cx", dotPos.x);
+            dot.setAttribute("cy", dotPos.y);
+
+            clockEl.textContent = localTime.toLocaleTimeString('en-GB', {
                 hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
             });
 
             const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
             const etH = etNow.getHours();
             const isPeak = etH >= 8 && etH < 14;
-            
+
             if (!isPeak) {
                 statusDisplay.className = 'status-badge status-on';
                 statusDisplay.innerHTML = '🟢 2x Limit Active';
@@ -369,19 +782,42 @@
             let peakStart = (8 + diffH + 24) % 24;
             let peakEnd = (14 + diffH + 24) % 24;
 
-            // Draw arcs
+            // Update marker colors and draw arcs
+            updateMarkerColors(peakStart, peakEnd);
             arcGroup.innerHTML = '';
             const peakPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
             peakPath.setAttribute("class", "usage-arc");
             peakPath.setAttribute("stroke", "var(--red)");
-            peakPath.setAttribute("d", describeArc(100, 100, 75, peakStart * 15, peakEnd * 15));
+            peakPath.setAttribute("d", describeArc(100, 100, 89, peakStart * 15, peakEnd * 15));
             arcGroup.appendChild(peakPath);
 
             const optPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            optPath.setAttribute("class", "usage-arc");
+            optPath.setAttribute("class", "usage-arc neon");
             optPath.setAttribute("stroke", "var(--green)");
-            optPath.setAttribute("d", describeArc(100, 100, 75, peakEnd * 15, peakStart * 15));
+            optPath.setAttribute("d", describeArc(100, 100, 89, peakEnd * 15, peakStart * 15));
             arcGroup.appendChild(optPath);
+
+            // Endpoint circles with hour labels at green arc boundaries
+            const endPointData = [
+                { angle: peakEnd * 15, hour: peakEnd },
+                { angle: peakStart * 15, hour: peakStart }
+            ];
+            endPointData.forEach(({ angle, hour }) => {
+                const pos = polarToCartesian(100, 100, 89, angle);
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("class", "arc-endpoint");
+                circle.setAttribute("cx", pos.x);
+                circle.setAttribute("cy", pos.y);
+                circle.setAttribute("r", "9");
+                arcGroup.appendChild(circle);
+
+                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.setAttribute("class", "arc-endpoint-label");
+                label.setAttribute("x", pos.x);
+                label.setAttribute("y", pos.y);
+                label.textContent = Math.floor(hour);
+                arcGroup.appendChild(label);
+            });
 
             let slots = [];
             if (peakStart < peakEnd) {
