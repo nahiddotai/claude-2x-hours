@@ -309,6 +309,14 @@
             fill: #4ade80;
             filter: url(#arcGlowStrong);
         }
+        .arc-endpoint-label {
+            fill: #fff;
+            font-size: 7px;
+            font-weight: 700;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+        }
         @keyframes arcPulse {
             0%, 100% { opacity: 0.6; }
             50% { opacity: 0.85; }
@@ -789,16 +797,27 @@
             optPath.setAttribute("d", describeArc(100, 100, 89, peakEnd * 15, peakStart * 15));
             arcGroup.appendChild(optPath);
 
-            // Endpoint circles at green arc boundaries
-            const endPoints = [peakEnd * 15, peakStart * 15];
-            endPoints.forEach(angle => {
+            // Endpoint circles with hour labels at green arc boundaries
+            const endPointData = [
+                { angle: peakEnd * 15, hour: peakEnd },
+                { angle: peakStart * 15, hour: peakStart }
+            ];
+            endPointData.forEach(({ angle, hour }) => {
                 const pos = polarToCartesian(100, 100, 89, angle);
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 circle.setAttribute("class", "arc-endpoint");
                 circle.setAttribute("cx", pos.x);
                 circle.setAttribute("cy", pos.y);
-                circle.setAttribute("r", "6");
+                circle.setAttribute("r", "9");
                 arcGroup.appendChild(circle);
+
+                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.setAttribute("class", "arc-endpoint-label");
+                label.setAttribute("x", pos.x);
+                label.setAttribute("y", pos.y);
+                const h12 = Math.floor(hour) % 12 || 12;
+                label.textContent = h12;
+                arcGroup.appendChild(label);
             });
 
             let slots = [];
