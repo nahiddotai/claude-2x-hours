@@ -37,6 +37,8 @@
             background-size: 40px 40px;
             color: var(--text);
             font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -50,7 +52,7 @@
             inset: 0;
             pointer-events: none;
             z-index: 0;
-            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(139, 92, 246, 0.07), transparent 60%);
+            background: radial-gradient(700px circle at var(--mouse-x) var(--mouse-y), rgba(167, 139, 250, 0.15), transparent 60%);
             transition: background 0.15s ease;
         }
         @media (hover: none) {
@@ -96,6 +98,7 @@
         p.sub { color: var(--muted); font-size: 15px; }
 
         .clock-section {
+            position: relative;
             text-align: center;
             margin-bottom: 24px;
             background: var(--surface-glass);
@@ -106,6 +109,14 @@
             padding: 20px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
             animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+        .clock-section::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 17px;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%);
+            pointer-events: none;
         }
         .digital-clock {
             font-family: 'JetBrains Mono', monospace;
@@ -149,6 +160,15 @@
             z-index: -1;
             filter: blur(20px);
             opacity: 0.5;
+        }
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 17px;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%);
+            pointer-events: none;
+            z-index: 1;
         }
         .card:hover {
             transform: translateY(-2px);
@@ -260,17 +280,22 @@
         }
         .usage-arc {
             fill: none;
-            stroke-width: 6;
-            opacity: 0.55;
+            stroke-width: 5;
+            opacity: 0.4;
             filter: url(#arcGlow);
         }
-        .marker { stroke: rgba(139, 92, 246, 0.15); stroke-width: 1; }
-        .marker.major { stroke: var(--muted); stroke-width: 2; }
+        .usage-arc.neon {
+            stroke-width: 8;
+            opacity: 0.7;
+            filter: url(#arcGlowStrong);
+        }
+        .marker { stroke: rgba(139, 92, 246, 0.25); stroke-width: 1; }
+        .marker.major { stroke: #e8e6f0; stroke-width: 2; }
         .marker-text {
             font-size: 10px;
             font-weight: 700;
             font-family: 'Inter', sans-serif;
-            fill: var(--muted);
+            fill: #e8e6f0;
             text-anchor: middle;
         }
 
@@ -348,6 +373,7 @@
             animation: fadeInUp 0.6s ease-out 0.4s both;
         }
         details {
+            position: relative;
             background: var(--surface-glass);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -356,6 +382,14 @@
             border-radius: 12px;
             overflow: hidden;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        details::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 13px;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%);
+            pointer-events: none;
         }
         details[open] {
             border-color: var(--border-hover);
@@ -386,8 +420,9 @@
         details[open] summary::after {
             transform: rotate(45deg);
         }
-        summary:hover { color: var(--accent); }
-        .faq-content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; text-align: left; }
+        summary:hover { color: var(--violet); }
+        summary:hover::after { border-color: var(--violet); }
+        .faq-content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; text-align: left; letter-spacing: 0.02em; }
 
         /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
@@ -428,6 +463,13 @@
                         </radialGradient>
                         <filter id="arcGlow">
                             <feGaussianBlur stdDeviation="3" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        <filter id="arcGlowStrong">
+                            <feGaussianBlur stdDeviation="5" result="blur"/>
                             <feMerge>
                                 <feMergeNode in="blur"/>
                                 <feMergeNode in="SourceGraphic"/>
@@ -531,14 +573,14 @@
                 const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("class", `marker ${isMajor ? 'major' : ''}`);
                 line.setAttribute("x1", "100");
-                line.setAttribute("y1", "25");
+                line.setAttribute("y1", "18");
                 line.setAttribute("x2", "100");
-                line.setAttribute("y2", 25 + length);
+                line.setAttribute("y2", 18 + length);
                 line.setAttribute("transform", `rotate(${angle} 100 100)`);
                 markers.appendChild(line);
 
                 if (isMajor) {
-                    const text = polarToCartesian(100, 100, 78, angle);
+                    const text = polarToCartesian(100, 100, 72, angle);
                     const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     textEl.setAttribute("class", "marker-text");
                     textEl.setAttribute("x", text.x);
@@ -612,7 +654,7 @@
             arcGroup.appendChild(peakPath);
 
             const optPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            optPath.setAttribute("class", "usage-arc");
+            optPath.setAttribute("class", "usage-arc neon");
             optPath.setAttribute("stroke", "var(--green)");
             optPath.setAttribute("d", describeArc(100, 100, 89, peakEnd * 15, peakStart * 15));
             arcGroup.appendChild(optPath);
