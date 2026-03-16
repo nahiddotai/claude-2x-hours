@@ -815,8 +815,7 @@
                 label.setAttribute("class", "arc-endpoint-label");
                 label.setAttribute("x", pos.x);
                 label.setAttribute("y", pos.y);
-                const h12 = Math.floor(hour) % 12 || 12;
-                label.textContent = h12;
+                label.textContent = Math.floor(hour);
                 arcGroup.appendChild(label);
             });
 
