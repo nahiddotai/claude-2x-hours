@@ -21,7 +21,7 @@
             --green: #4ade80;
             --green-glow: rgba(74, 222, 128, 0.15);
             --orange: #f59e0b;
-            --red: #ff4b4b;
+            --red: #ff6b6b;
             --red-glow: rgba(255, 75, 75, 0.15);
             --violet: #8b5cf6;
             --violet-glow: rgba(139, 92, 246, 0.15);
@@ -294,16 +294,20 @@
         }
         .usage-arc {
             fill: none;
-            stroke-width: 5;
+            stroke-width: 10;
             stroke-linecap: round;
-            opacity: 0.4;
+            opacity: 0.55;
             filter: url(#arcGlow);
         }
         .usage-arc.neon {
-            stroke-width: 8;
+            stroke-width: 14;
             opacity: 0.7;
             filter: url(#arcGlowStrong);
             animation: arcPulse 3s ease-in-out infinite;
+        }
+        .arc-endpoint {
+            fill: #4ade80;
+            filter: url(#arcGlowStrong);
         }
         @keyframes arcPulse {
             0%, 100% { opacity: 0.6; }
@@ -784,6 +788,18 @@
             optPath.setAttribute("stroke", "var(--green)");
             optPath.setAttribute("d", describeArc(100, 100, 89, peakEnd * 15, peakStart * 15));
             arcGroup.appendChild(optPath);
+
+            // Endpoint circles at green arc boundaries
+            const endPoints = [peakEnd * 15, peakStart * 15];
+            endPoints.forEach(angle => {
+                const pos = polarToCartesian(100, 100, 89, angle);
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("class", "arc-endpoint");
+                circle.setAttribute("cx", pos.x);
+                circle.setAttribute("cy", pos.y);
+                circle.setAttribute("r", "6");
+                arcGroup.appendChild(circle);
+            });
 
             let slots = [];
             if (peakStart < peakEnd) {
