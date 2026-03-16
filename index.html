@@ -292,11 +292,18 @@
         .marker { stroke: rgba(139, 92, 246, 0.25); stroke-width: 1; }
         .marker.major { stroke: #e8e6f0; stroke-width: 2; }
         .marker-text {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 700;
             font-family: 'Inter', sans-serif;
             fill: #e8e6f0;
             text-anchor: middle;
+        }
+        .marker-text.off-peak {
+            fill: #4ade80;
+            filter: url(#arcGlowStrong);
+        }
+        .marker-text.peak {
+            fill: var(--muted);
         }
 
         #results {
@@ -423,6 +430,17 @@
         summary:hover { color: var(--violet); }
         summary:hover::after { border-color: var(--violet); }
         .faq-content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; text-align: left; letter-spacing: 0.02em; }
+
+        /* Mobile-first responsiveness */
+        @media (max-width: 400px) {
+            body { padding: 24px 16px; }
+            .digital-clock { font-size: 36px; }
+        }
+        @media (hover: none) {
+            .clock-section::after,
+            .card::after,
+            details::after { display: none; }
+        }
 
         /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
@@ -564,6 +582,8 @@
             ].join(" ");
         }
 
+        const markerTextEls = [];
+
         function createMarkers() {
             const markers = document.getElementById('markers');
             for (let i = 0; i < 24; i++) {
@@ -580,15 +600,34 @@
                 markers.appendChild(line);
 
                 if (isMajor) {
-                    const text = polarToCartesian(100, 100, 72, angle);
+                    const text = polarToCartesian(100, 100, 62, angle);
                     const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     textEl.setAttribute("class", "marker-text");
                     textEl.setAttribute("x", text.x);
-                    textEl.setAttribute("y", text.y + 3.5);
+                    textEl.setAttribute("y", text.y + 4);
                     textEl.textContent = i;
                     markers.appendChild(textEl);
+                    markerTextEls.push({ el: textEl, hour: i });
                 }
             }
+        }
+
+        function isHourInPeak(hour, peakStart, peakEnd) {
+            if (peakStart < peakEnd) {
+                return hour >= peakStart && hour < peakEnd;
+            } else {
+                return hour >= peakStart || hour < peakEnd;
+            }
+        }
+
+        function updateMarkerColors(peakStart, peakEnd) {
+            markerTextEls.forEach(({ el, hour }) => {
+                if (isHourInPeak(hour, peakStart, peakEnd)) {
+                    el.setAttribute("class", "marker-text peak");
+                } else {
+                    el.setAttribute("class", "marker-text off-peak");
+                }
+            });
         }
 
         function fmtH(h) {
@@ -645,7 +684,8 @@
             let peakStart = (8 + diffH + 24) % 24;
             let peakEnd = (14 + diffH + 24) % 24;
 
-            // Draw arcs on outer ring
+            // Update marker colors and draw arcs
+            updateMarkerColors(peakStart, peakEnd);
             arcGroup.innerHTML = '';
             const peakPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
             peakPath.setAttribute("class", "usage-arc");
