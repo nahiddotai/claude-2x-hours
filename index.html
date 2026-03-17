@@ -137,6 +137,33 @@
             color: var(--muted);
             letter-spacing: 0.1em;
         }
+        .countdown-container {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .countdown-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 4px;
+            transition: color 0.4s ease;
+        }
+        .countdown-label.active {
+            color: rgba(74, 222, 128, 0.7);
+        }
+        .countdown-timer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text) 0%, var(--violet) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
         .card {
             position: relative;
@@ -590,6 +617,11 @@
                 </svg>
             </div>
 
+            <div class="countdown-container">
+                <div class="countdown-label" id="countdownLabel">2x starts in</div>
+                <div class="countdown-timer" id="countdownTimer">--h --m --s</div>
+            </div>
+
             <div id="results">
                 <div id="locationLabel" style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text); text-align: left;">Detecting location...</div>
                 <div class="window-box">
@@ -768,6 +800,34 @@
                 indicatorDot.style.background = '#f59e0b';
                 indicatorDot.style.boxShadow = '0 0 10px #f59e0b';
             }
+
+            // Countdown timer
+            const etM = etNow.getMinutes();
+            const etS = etNow.getSeconds();
+            const countdownLabel = document.getElementById('countdownLabel');
+            const countdownTimer = document.getElementById('countdownTimer');
+            let remaining;
+
+            if (isPeak) {
+                // Count down to 14:00 ET (when green starts)
+                remaining = (13 - etH) * 3600 + (59 - etM) * 60 + (60 - etS);
+                countdownLabel.textContent = '2x starts in';
+                countdownLabel.className = 'countdown-label';
+            } else {
+                // Count down to 08:00 ET (when green ends)
+                if (etH >= 14) {
+                    remaining = (24 - etH + 8) * 3600 - etM * 60 - etS;
+                } else {
+                    remaining = (7 - etH) * 3600 + (59 - etM) * 60 + (60 - etS);
+                }
+                countdownLabel.textContent = '2x ends in';
+                countdownLabel.className = 'countdown-label active';
+            }
+
+            const ch = Math.floor(remaining / 3600);
+            const cm = Math.floor((remaining % 3600) / 60);
+            const cs = remaining % 60;
+            countdownTimer.textContent = `${ch}h ${cm}m ${cs}s`;
         }
 
         function calculate(timeZone, cityName) {
