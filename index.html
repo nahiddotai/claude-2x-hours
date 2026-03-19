@@ -819,9 +819,9 @@
             // Position current-hour indicator dot on the arc
             const currentAngle = hourAngle;
             const dotPos = polarToCartesian(100, 100, 89, currentAngle);
-            const dot = document.getElementById('current-hour-dot');
-            dot.setAttribute("cx", dotPos.x);
-            dot.setAttribute("cy", dotPos.y);
+            const dotEl = document.getElementById('current-hour-dot');
+            dotEl.setAttribute("cx", dotPos.x);
+            dotEl.setAttribute("cy", dotPos.y);
 
             clockEl.textContent = localTime.toLocaleTimeString('en-GB', {
                 hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
