@@ -286,6 +286,7 @@
             justify-content: center;
             align-items: center;
             gap: 8px;
+            position: relative;
         }
         .countdown-seg {
             background: rgba(255,255,255,0.03);
@@ -355,9 +356,9 @@
         /* Countdown progress ring */
         .countdown-ring {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            inset: -8px;
+            width: calc(100% + 16px);
+            height: calc(100% + 16px);
             pointer-events: none;
         }
         .countdown-ring circle {
@@ -1020,16 +1021,16 @@
             </div>
 
             <div class="countdown-container">
-                <svg class="countdown-ring" width="160" height="160" viewBox="0 0 160 160" aria-hidden="true">
-                    <circle cx="80" cy="80" r="76" fill="none" stroke="rgba(139,92,246,0.06)" stroke-width="2"/>
-                    <circle id="countdownRingFill" cx="80" cy="80" r="76" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"
-                        stroke-dasharray="477.5" stroke-dashoffset="0" transform="rotate(-90 80 80)"/>
-                </svg>
                 <div class="countdown-label" id="countdownLabel">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
                     <span id="countdownLabelText">2x starts in</span>
                 </div>
                 <div class="countdown-segments">
+                    <svg class="countdown-ring" viewBox="0 0 100 100" aria-hidden="true">
+                        <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(139,92,246,0.06)" stroke-width="1.5"/>
+                        <circle id="countdownRingFill" cx="50" cy="50" r="46" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"
+                            stroke-dasharray="289.03" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+                    </svg>
                     <div class="countdown-seg">
                         <span class="seg-value" id="cHrs"><span class="seg-digit">--</span></span>
                         <span class="seg-label">HRS</span>
@@ -1370,7 +1371,7 @@
 
             // Countdown ring
             const ringEl = document.getElementById('countdownRingFill');
-            const circumference = 2 * Math.PI * 76;
+            const circumference = 2 * Math.PI * 46;
             const ringOffset = circumference * (1 - remaining / totalWindow);
             ringEl.setAttribute('stroke-dasharray', circumference.toFixed(1));
             ringEl.setAttribute('stroke-dashoffset', ringOffset.toFixed(1));
