@@ -1018,8 +1018,8 @@
         document.addEventListener('click', (e) => { if (!search.contains(e.target)) closeDropdown(); });
 
         createMarkers();
+        calculate(currentTimeZone, null);
         setInterval(updateClock, 1000);
-        window.onload = () => calculate(currentTimeZone, null);
     </script>
 </body>
 </html>
