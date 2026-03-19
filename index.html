@@ -107,13 +107,7 @@
             animation: fadeInUp 0.6s ease-out 0.1s both;
             position: relative;
         }
-        .logomark {
-            display: block;
-            width: 48px;
-            height: 48px;
-            margin: 0 auto 12px;
-            filter: drop-shadow(0 0 10px rgba(139,92,246,0.5));
-        }
+
         .live-badge {
             position: absolute;
             top: 4px;
@@ -286,7 +280,6 @@
             justify-content: center;
             align-items: center;
             gap: 8px;
-            position: relative;
         }
         .countdown-seg {
             background: rgba(255,255,255,0.03);
@@ -353,17 +346,7 @@
             0%, 100% { background-position: 100% 0; }
             50% { background-position: -100% 0; }
         }
-        /* Countdown progress ring */
-        .countdown-ring {
-            position: absolute;
-            inset: -8px;
-            width: calc(100% + 16px);
-            height: calc(100% + 16px);
-            pointer-events: none;
-        }
-        .countdown-ring circle {
-            transition: stroke-dashoffset 1s linear, stroke 0.4s ease;
-        }
+
 
         .card {
             position: relative;
@@ -908,14 +891,7 @@
     <div id="cursor-glow"></div>
     <div class="container">
         <div class="header">
-            <svg class="logomark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <circle cx="24" cy="24" r="21" stroke="rgba(139,92,246,0.7)" stroke-width="2" fill="none"/>
-                <circle cx="24" cy="24" r="18" stroke="rgba(139,92,246,0.15)" stroke-width="1" fill="none"/>
-                <line x1="24" y1="24" x2="24" y2="12" stroke="#f0eef6" stroke-width="2" stroke-linecap="round"/>
-                <line x1="24" y1="24" x2="32" y2="24" stroke="#f0eef6" stroke-width="1.5" stroke-linecap="round"/>
-                <path d="M26 10L22 20h6l-4 10" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                <circle cx="24" cy="24" r="2" fill="#8b5cf6"/>
-            </svg>
+
             <h1>Claude 2x</h1>
             <p class="sub"><span id="typewriter"></span><span id="typewriterCursor" class="typewriter-cursor">&nbsp;</span></p>
             <div class="live-badge">
@@ -1026,11 +1002,6 @@
                     <span id="countdownLabelText">2x starts in</span>
                 </div>
                 <div class="countdown-segments">
-                    <svg class="countdown-ring" viewBox="0 0 100 100" aria-hidden="true">
-                        <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(139,92,246,0.06)" stroke-width="1.5"/>
-                        <circle id="countdownRingFill" cx="50" cy="50" r="46" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"
-                            stroke-dasharray="289.03" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
-                    </svg>
                     <div class="countdown-seg">
                         <span class="seg-value" id="cHrs"><span class="seg-digit">--</span></span>
                         <span class="seg-label">HRS</span>
@@ -1369,13 +1340,6 @@
             progressBar.style.background = isPeak ? 'var(--orange)' : 'var(--green)';
             progressBar.style.boxShadow = isPeak ? '0 0 8px var(--orange)' : '0 0 8px var(--green)';
 
-            // Countdown ring
-            const ringEl = document.getElementById('countdownRingFill');
-            const circumference = 2 * Math.PI * 46;
-            const ringOffset = circumference * (1 - remaining / totalWindow);
-            ringEl.setAttribute('stroke-dasharray', circumference.toFixed(1));
-            ringEl.setAttribute('stroke-dashoffset', ringOffset.toFixed(1));
-            ringEl.setAttribute('stroke', isPeak ? 'var(--orange)' : 'var(--green)');
 
             // Window progress bar
             const wpFill = document.getElementById('windowProgressFill');
