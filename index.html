@@ -35,6 +35,7 @@
                 linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
+            animation: gridDrift 20s linear infinite;
             color: var(--text);
             font-family: 'Inter', -apple-system, system-ui, sans-serif;
             display: flex;
@@ -68,6 +69,17 @@
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.3); opacity: 0.7; }
         }
+        @keyframes gridDrift {
+            from { background-position-y: 0; }
+            to { background-position-y: 40px; }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        @keyframes cursorFade {
+            to { opacity: 0; }
+        }
         @keyframes dropdownSlideIn {
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -77,10 +89,56 @@
             50% { filter: url(#glowStrong); }
         }
 
+        /* Top progress bar */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            z-index: 100;
+            background: var(--green);
+            transition: width 0.5s linear, background 0.4s ease;
+            box-shadow: 0 0 8px var(--green-glow);
+        }
+
         .header {
             text-align: center;
             margin-bottom: 32px;
             animation: fadeInUp 0.6s ease-out 0.1s both;
+            position: relative;
+        }
+
+        .live-badge {
+            position: absolute;
+            top: 4px;
+            right: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--green);
+            padding: 3px 10px 3px 8px;
+            border-radius: 99px;
+            background: rgba(74,222,128,0.08);
+            border: 1px solid rgba(74,222,128,0.2);
+        }
+        .live-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .typewriter-cursor {
+            border-right: 2px solid var(--violet);
+            animation: blink 0.7s step-end infinite;
+        }
+        .typewriter-cursor.done {
+            animation: blink 0.7s step-end infinite, cursorFade 0.5s ease 0.5s forwards;
         }
         /* Visually hidden but accessible to screen readers */
         .sr-only {
@@ -140,21 +198,67 @@
             font-variant-numeric: tabular-nums;
             letter-spacing: -0.5px;
             margin-bottom: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .digit-slot {
+            display: inline-block;
+            overflow: hidden;
+            height: 1.15em;
+            position: relative;
+            width: 0.62em;
+        }
+        .digit-slot .digit-inner {
+            display: block;
             background: linear-gradient(135deg, var(--text) 0%, var(--muted) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+        }
+        .digit-slot .digit-inner.exit {
+            transform: translateY(40%);
+            opacity: 0;
+        }
+        .digit-slot .digit-inner.enter {
+            transform: translateY(-40%);
+            opacity: 0;
+        }
+        .clock-sep {
+            background: linear-gradient(135deg, var(--text) 0%, var(--muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            width: 0.3em;
+            text-align: center;
         }
         .clock-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             color: var(--muted);
             letter-spacing: 0.1em;
+            padding: 3px 12px;
+            border-radius: 99px;
+            background: rgba(139,92,246,0.06);
+            border: 1px solid var(--border);
+        }
+        .clock-label svg { flex-shrink: 0; }
+        .clock-date {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 6px;
         }
         .countdown-container {
             text-align: center;
             margin-bottom: 16px;
+            position: relative;
         }
         .countdown-label {
             font-size: 11px;
@@ -162,18 +266,39 @@
             text-transform: uppercase;
             letter-spacing: 0.1em;
             color: var(--muted);
-            margin-bottom: 4px;
+            margin-bottom: 10px;
             transition: color 0.4s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         .countdown-label.active {
             color: rgba(74, 222, 128, 0.7);
         }
-        .countdown-timer {
+        .countdown-segments {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .countdown-seg {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 4px 6px;
+            min-width: 56px;
+            text-align: center;
+        }
+        .seg-value {
+            display: block;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 28px;
-            font-weight: 700;
+            font-size: 26px;
+            font-weight: 800;
             font-variant-numeric: tabular-nums;
-            letter-spacing: -0.5px;
+            line-height: 1;
+            overflow: hidden;
+            height: 1.1em;
+            position: relative;
             background: linear-gradient(
                 135deg,
                 var(--text) 0%,
@@ -188,10 +313,40 @@
             background-clip: text;
             animation: timerShine 4s ease-in-out infinite;
         }
+        .seg-value .seg-digit {
+            display: block;
+            transition: transform 80ms ease-in-out, opacity 80ms ease-in-out;
+        }
+        .seg-value .seg-digit.seg-exit {
+            transform: translateY(40%);
+            opacity: 0;
+        }
+        .seg-value .seg-digit.seg-enter {
+            transform: translateY(-40%);
+            opacity: 0;
+        }
+        .seg-label {
+            display: block;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+        .seg-sep {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--muted);
+            opacity: 0.4;
+            padding-bottom: 14px;
+        }
         @keyframes timerShine {
             0%, 100% { background-position: 100% 0; }
             50% { background-position: -100% 0; }
         }
+
 
         .card {
             position: relative;
@@ -215,6 +370,7 @@
             z-index: -1;
             filter: blur(20px);
             opacity: 0.5;
+            transition: opacity 0.2s ease;
         }
         .card::after {
             content: '';
@@ -230,33 +386,27 @@
             box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
             border-color: var(--border-hover);
         }
+        .card:hover::before {
+            opacity: 0.8;
+        }
 
         .search-wrap { position: relative; margin-bottom: 24px; }
-        .search-wrap::before {
-            content: '';
+        .search-icon {
             position: absolute;
-            left: 16px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--muted);
-            border-radius: 50%;
             z-index: 2;
             pointer-events: none;
+            color: var(--muted);
+            transition: color 0.3s ease;
         }
-        .search-wrap::after {
-            content: '';
-            position: absolute;
-            left: 29px;
-            top: 50%;
-            transform: translateY(-50%) rotate(45deg);
-            width: 0;
-            height: 6px;
-            border-left: 2px solid var(--muted);
-            margin-top: 8px;
-            z-index: 2;
-            pointer-events: none;
+        input:focus ~ .search-icon,
+        .search-wrap:focus-within .search-icon { color: var(--violet); }
+        @keyframes focusPulse {
+            0% { box-shadow: 0 0 0 3px var(--violet-glow), 0 0 20px var(--violet-glow); }
+            50% { box-shadow: 0 0 0 6px var(--violet-glow), 0 0 30px var(--violet-glow); }
+            100% { box-shadow: 0 0 0 3px var(--violet-glow), 0 0 20px var(--violet-glow); }
         }
         input {
             width: 100%;
@@ -272,6 +422,7 @@
         }
         input:focus {
             border-color: var(--violet);
+            animation: focusPulse 0.4s ease-out;
             box-shadow: 0 0 0 3px var(--violet-glow), 0 0 20px var(--violet-glow);
         }
         input::placeholder {
@@ -309,6 +460,28 @@
         .autocomplete-item:last-child { border-bottom: none; }
         .autocomplete-item .city-name { font-weight: 600; color: var(--text); }
         .autocomplete-item .city-country { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .autocomplete-item .city-row { display: flex; justify-content: space-between; align-items: center; }
+        .country-code {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--muted);
+            background: rgba(139,92,246,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .autocomplete-item .enter-hint {
+            font-size: 14px;
+            color: var(--muted);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+        .autocomplete-item:hover .enter-hint,
+        .autocomplete-item.active .enter-hint { opacity: 0.5; }
 
         /* Analog Clock */
         #analog-clock-wrap {
@@ -330,7 +503,7 @@
             filter: url(#handGlow);
             transition: transform 0.8s cubic-bezier(0.4, 2.08, 0.55, 0.44);
         }
-        .minute-hand { stroke: #fbbf24; stroke-width: 2.5; filter: url(#handGlow); }
+        .minute-hand { fill: #fbbf24; filter: url(#handGlow); }
         .second-hand-group {
             transition: transform 1s linear;
         }
@@ -353,24 +526,28 @@
             stroke-linecap: round;
             opacity: 0.55;
             filter: url(#arcGlow);
+            stroke-dasharray: 4 4;
         }
         .usage-arc.neon {
             stroke-width: 14;
             opacity: 0.7;
             filter: url(#arcGlowStrong);
             animation: arcPulse 3s ease-in-out infinite;
+            stroke-dasharray: none;
         }
-        .arc-endpoint {
-            fill: #4ade80;
-            filter: url(#arcGlowStrong);
+        .arc-shimmer {
+            fill: none;
+            stroke-linecap: round;
+            pointer-events: none;
         }
         .arc-endpoint-label {
             fill: #fff;
-            font-size: 7px;
+            font-size: 6px;
             font-weight: 700;
             text-anchor: middle;
             dominant-baseline: central;
             pointer-events: none;
+            font-family: 'Inter', sans-serif;
         }
         @keyframes arcPulse {
             0%, 100% { opacity: 0.6; }
@@ -420,6 +597,26 @@
         .marker-text.peak {
             fill: var(--muted);
         }
+        .marker-badge {
+            rx: 3;
+            ry: 3;
+        }
+        .marker-badge.off-peak { fill: rgba(74,222,128,0.12); }
+        .marker-badge.peak { fill: rgba(255,107,107,0.12); }
+        .minor-tick {
+            stroke: rgba(255,255,255,0.15);
+            stroke-width: 0.8;
+        }
+        .minor-tick.fifth {
+            stroke: rgba(255,255,255,0.3);
+        }
+        @keyframes clockScaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        #analog-clock-wrap {
+            animation: clockScaleIn 0.4s ease-out 0.4s both;
+        }
 
         #results {
             margin-top: 0;
@@ -437,6 +634,10 @@
             position: relative;
             text-align: left;
         }
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            100% { transform: scale(2.8); opacity: 0; }
+        }
         .indicator-dot {
             position: absolute;
             top: 20px;
@@ -444,7 +645,18 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
+        }
+        .indicator-dot::before,
+        .indicator-dot::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 1.5px solid currentColor;
+            animation: ripple 2s ease-out infinite;
+        }
+        .indicator-dot::after {
+            animation-delay: 0.7s;
         }
         .label {
             font-size: 11px;
@@ -455,14 +667,63 @@
             margin-bottom: 10px;
         }
         .time-slot { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+        /* Mini timeline bar */
+        .mini-timeline {
+            width: 180px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,107,107,0.2);
+            margin: 8px 0 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .mini-timeline-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--green);
+            position: absolute;
+            top: 0;
+            transition: left 0.3s ease, width 0.3s ease;
+        }
         .avoid-label {
             font-size: 12px;
             color: var(--muted);
             margin-top: 16px;
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 6px;
             border-top: 1px dashed var(--border);
             padding-top: 12px;
         }
+        .avoid-label svg { flex-shrink: 0; }
+        /* Window progress bar at bottom */
+        .window-progress {
+            height: 2px;
+            border-radius: 1px;
+            margin-top: 14px;
+            background: rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+        .window-progress-fill {
+            height: 100%;
+            border-radius: 1px;
+            transition: width 0.5s linear, background 0.4s ease;
+        }
+        /* Skeleton loading */
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .skeleton {
+            height: 28px;
+            width: 70%;
+            border-radius: 6px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            margin-bottom: 6px;
+        }
+        .skeleton:last-child { width: 50%; }
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -487,6 +748,22 @@
             color: var(--orange);
             border: 1px solid rgba(245,158,11,0.2);
             box-shadow: 0 0 20px rgba(245,158,11,0.1);
+        }
+        @keyframes badgePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        .status-badge.transitioning {
+            animation: badgePop 0.25s ease;
+        }
+        .status-badge svg { flex-shrink: 0; }
+        @keyframes statusGlow {
+            0%, 100% { filter: drop-shadow(0 0 2px currentColor); }
+            50% { filter: drop-shadow(0 0 6px currentColor); }
+        }
+        .status-badge.status-on svg {
+            animation: statusGlow 2s ease-in-out infinite;
         }
 
         .faq {
@@ -523,8 +800,8 @@
             font-weight: 600;
             font-size: 14px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 8px;
             transition: color 0.2s ease;
             list-style: none;
         }
@@ -538,13 +815,42 @@
             transform: rotate(-45deg);
             transition: transform 0.3s ease;
             flex-shrink: 0;
+            margin-left: auto;
         }
         details[open] summary::after {
             transform: rotate(45deg);
         }
         summary:hover { color: var(--violet); }
         summary:hover::after { border-color: var(--violet); }
-        .faq-content { padding: 0 16px 16px; font-size: 14px; color: var(--muted); line-height: 1.6; text-align: left; letter-spacing: 0.02em; text-transform: none; }
+        summary svg { flex-shrink: 0; color: var(--violet); }
+        .faq-inner {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 250ms ease;
+        }
+        details[open] .faq-inner {
+            grid-template-rows: 1fr;
+        }
+        .faq-inner > div {
+            overflow: hidden;
+        }
+        .faq-content {
+            padding: 0 16px 16px 16px;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+            text-align: left;
+            letter-spacing: 0.02em;
+            text-transform: none;
+            border-left: 2px solid var(--violet);
+            margin-left: 16px;
+            padding-left: 12px;
+            opacity: 0;
+            transition: opacity 250ms ease;
+        }
+        details[open] .faq-content {
+            opacity: 1;
+        }
 
         summary:focus { outline: none; }
         summary:focus-visible {
@@ -581,23 +887,36 @@
     </style>
 </head>
 <body>
+    <div id="progress-bar"></div>
     <div id="cursor-glow"></div>
     <div class="container">
         <div class="header">
+
             <h1>Claude 2x</h1>
-            <p class="sub">Find your off-peak usage window</p>
+            <p class="sub"><span id="typewriter"></span><span id="typewriterCursor" class="typewriter-cursor">&nbsp;</span></p>
+            <div class="live-badge">
+                <span class="live-badge-dot"></span>
+                LIVE
+            </div>
         </div>
 
         <div class="clock-section">
-            <div id="digitalClock" class="digital-clock">00:00:00</div>
-            <div id="clockLocation" class="clock-label">Local Time</div>
+            <div id="digitalClock" class="digital-clock">
+                <span class="digit-slot"><span class="digit-inner" data-idx="0">0</span></span><span class="digit-slot"><span class="digit-inner" data-idx="1">0</span></span><span class="clock-sep">:</span><span class="digit-slot"><span class="digit-inner" data-idx="2">0</span></span><span class="digit-slot"><span class="digit-inner" data-idx="3">0</span></span><span class="clock-sep">:</span><span class="digit-slot"><span class="digit-inner" data-idx="4">0</span></span><span class="digit-slot"><span class="digit-inner" data-idx="5">0</span></span>
+            </div>
+            <div id="clockLocation" class="clock-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+                <span id="clockLocationText">Local Time</span>
+            </div>
+            <div id="clockDate" class="clock-date"></div>
         </div>
-
+        <div style="width:1px;height:24px;margin:-8px auto 16px;border-left:1px dashed var(--border);"></div>
         <div class="card">
             <div class="search-wrap">
                 <label for="citySearch" class="sr-only">Search city by name</label>
                 <input type="text" id="citySearch" placeholder="Search any city (e.g. Sydney, Paris)..." autocomplete="off"
                     aria-autocomplete="list" aria-expanded="false" aria-controls="autocomplete">
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                 <div id="autocomplete" class="autocomplete-results" role="listbox" aria-label="City suggestions"></div>
             </div>
 
@@ -608,6 +927,19 @@
                             <stop offset="0%" stop-color="#16162a"/>
                             <stop offset="100%" stop-color="#0e0e1a"/>
                         </radialGradient>
+                        <linearGradient id="rimGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="rgba(139,92,246,0.35)"/>
+                            <stop offset="100%" stop-color="rgba(139,92,246,0.08)"/>
+                        </linearGradient>
+                        <linearGradient id="shimmerGrad" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="rgba(74,222,128,0)"/>
+                            <stop offset="40%" stop-color="rgba(74,222,128,0)"/>
+                            <stop offset="50%" stop-color="rgba(74,222,128,0.7)"/>
+                            <stop offset="60%" stop-color="rgba(74,222,128,0)"/>
+                            <stop offset="100%" stop-color="rgba(74,222,128,0)"/>
+                            <animate attributeName="x1" values="-1;1" dur="4s" repeatCount="indefinite"/>
+                            <animate attributeName="x2" values="0;2" dur="4s" repeatCount="indefinite"/>
+                        </linearGradient>
                         <filter id="arcGlow">
                             <feGaussianBlur stdDeviation="3" result="blur"/>
                             <feMerge>
@@ -632,10 +964,14 @@
                     </defs>
                     <!-- Outer glow ring -->
                     <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(139,92,246,0.08)" stroke-width="1" filter="url(#arcGlow)"/>
-                    <!-- Main clock face -->
-                    <circle cx="100" cy="100" r="92" fill="url(#clockBg)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+                    <!-- Main clock face with gradient rim -->
+                    <circle cx="100" cy="100" r="92" fill="url(#clockBg)" stroke="url(#rimGrad)" stroke-width="1.5"/>
                     <!-- Inner shadow ring -->
                     <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="3"/>
+                    <!-- Depth rings -->
+                    <circle cx="100" cy="100" r="23" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+                    <circle cx="100" cy="100" r="46" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+                    <circle cx="100" cy="100" r="69" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
                     <!-- Concentric decorative rings -->
                     <circle cx="100" cy="100" r="70" class="clock-ring"/>
                     <circle cx="100" cy="100" r="55" class="clock-ring-spin"/>
@@ -644,24 +980,43 @@
                     <!-- Current hour indicator -->
                     <circle id="current-hour-dot" class="current-hour-dot" cx="100" cy="11" r="3"/>
                     <g id="markers"></g>
-                    <!-- Hour hand (tapered polygon) -->
-                    <polygon id="hour-hand" class="hour-hand-shape" points="97,100 100,45 103,100"/>
-                    <!-- Minute hand -->
-                    <line id="minute-hand" class="hand minute-hand" x1="100" y1="100" x2="100" y2="35" />
-                    <!-- Second hand with counterweight -->
+                    <!-- Hour hand (tapered with notch) -->
+                    <path id="hour-hand" class="hour-hand-shape" d="M98.5,100 L97.5,92 L100,44 L102.5,92 L101.5,100 L100.5,96 L99.5,96 Z"/>
+                    <!-- Minute hand (tapered) -->
+                    <path id="minute-hand" class="hand minute-hand" d="M99.2,100 L99,90 L100,34 L101,90 L100.8,100 Z" fill="#fbbf24" stroke="none" filter="url(#handGlow)"/>
+                    <!-- Second hand with diamond counterweight -->
                     <g id="second-hand" class="second-hand-group">
                         <line x1="100" y1="115" x2="100" y2="30" class="second-hand-line"/>
-                        <circle cx="100" cy="115" r="2.5" class="second-hand-dot"/>
+                        <polygon points="100,112 102.5,115 100,118 97.5,115" class="second-hand-dot"/>
                     </g>
                     <!-- Layered center hub -->
-                    <circle cx="100" cy="100" r="6" fill="none" stroke="rgba(139,92,246,0.3)" stroke-width="1"/>
+                    <circle cx="100" cy="100" r="7" fill="none" stroke="rgba(139,92,246,0.3)" stroke-width="2"/>
+                    <circle cx="100" cy="100" r="5" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
                     <circle cx="100" cy="100" r="3" fill="var(--accent)" filter="url(#handGlow)"/>
                 </svg>
             </div>
 
             <div class="countdown-container">
-                <div class="countdown-label" id="countdownLabel">2x starts in</div>
-                <div class="countdown-timer" id="countdownTimer">--h --m --s</div>
+                <div class="countdown-label" id="countdownLabel">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
+                    <span id="countdownLabelText">2x starts in</span>
+                </div>
+                <div class="countdown-segments">
+                    <div class="countdown-seg">
+                        <span class="seg-value" id="cHrs"><span class="seg-digit">--</span></span>
+                        <span class="seg-label">HRS</span>
+                    </div>
+                    <span class="seg-sep">:</span>
+                    <div class="countdown-seg">
+                        <span class="seg-value" id="cMin"><span class="seg-digit">--</span></span>
+                        <span class="seg-label">MIN</span>
+                    </div>
+                    <span class="seg-sep">:</span>
+                    <div class="countdown-seg">
+                        <span class="seg-value" id="cSec"><span class="seg-digit">--</span></span>
+                        <span class="seg-label">SEC</span>
+                    </div>
+                </div>
             </div>
 
             <div id="results">
@@ -669,22 +1024,35 @@
                 <div class="window-box">
                     <div id="indicatorDot" class="indicator-dot"></div>
                     <div class="label">Use Claude 2x During</div>
-                    <div id="localWindow" class="time-container">--</div>
-                    <span class="avoid-label">Avoid (Normal Limits)</span>
+                    <div id="localWindow" class="time-container"><div class="skeleton"></div><div class="skeleton"></div></div>
+                    <div id="miniTimeline" class="mini-timeline"><div id="miniTimelineFill" class="mini-timeline-fill"></div></div>
+                    <span class="avoid-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--orange)"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                        Avoid (Normal Limits)
+                    </span>
                     <div id="avoidWindow" style="font-size: 13px; font-weight: 600; color: var(--muted);">--</div>
+                    <div class="window-progress"><div id="windowProgressFill" class="window-progress-fill"></div></div>
                 </div>
                 <div style="text-align: left;"><div id="status" class="status-badge"></div></div>
             </div>
         </div>
 
+        <div class="connector" style="width:1px;height:24px;margin:0 auto;border-left:1px dashed var(--border);"></div>
+
         <div class="faq">
             <details>
-                <summary>What is the promotion?</summary>
-                <div class="faq-content">From March 13 to March 27, 2026, your 5-hour usage limit is doubled during off-peak hours (outside 8 AM–2 PM ET).</div>
+                <summary>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
+                    What is the promotion?
+                </summary>
+                <div class="faq-inner"><div><div class="faq-content">From March 13 to March 27, 2026, your 5-hour usage limit is doubled during off-peak hours (outside 8 AM–2 PM ET).</div></div></div>
             </details>
             <details>
-                <summary>Who is eligible?</summary>
-                <div class="faq-content">Free, Pro, Max, and Team plans are included. Enterprise plans are excluded.</div>
+                <summary>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Who is eligible?
+                </summary>
+                <div class="faq-inner"><div><div class="faq-content">Free, Pro, Max, and Team plans are included. Enterprise plans are excluded.</div></div></div>
             </details>
         </div>
     </div>
@@ -705,7 +1073,10 @@
         const search = document.getElementById('citySearch');
         const auto = document.getElementById('autocomplete');
         const clockEl = document.getElementById('digitalClock');
-        const clockLocEl = document.getElementById('clockLocation');
+        const clockLocEl = document.getElementById('clockLocationText');
+        const clockDateEl = document.getElementById('clockDate');
+        const digitEls = clockEl.querySelectorAll('.digit-inner');
+        let prevDigits = ['0','0','0','0','0','0'];
         const windowDisplay = document.getElementById('localWindow');
         const avoidDisplay = document.getElementById('avoidWindow');
         const statusDisplay = document.getElementById('status');
@@ -715,6 +1086,7 @@
 
         let currentTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         let debounceTimer = null;
+        let prevIsPeak = null;
 
         function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
             const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
@@ -737,8 +1109,30 @@
 
         const markerTextEls = [];
 
+        const markerBadgeEls = [];
+
         function createMarkers() {
             const markers = document.getElementById('markers');
+
+            // 60 minor tick marks
+            for (let i = 0; i < 60; i++) {
+                const angle = i * 6;
+                // Skip positions where hour markers exist (every 2.5 ticks = every 15 degrees)
+                if (angle % 15 === 0) continue;
+                const isFifth = i % 5 === 0;
+                const innerR = isFifth ? 84 : 86;
+                const outerR = 90;
+                const p1 = polarToCartesian(100, 100, innerR, angle);
+                const p2 = polarToCartesian(100, 100, outerR, angle);
+                const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                tick.setAttribute("class", "minor-tick" + (isFifth ? " fifth" : ""));
+                tick.setAttribute("x1", p1.x);
+                tick.setAttribute("y1", p1.y);
+                tick.setAttribute("x2", p2.x);
+                tick.setAttribute("y2", p2.y);
+                markers.appendChild(tick);
+            }
+
             for (let i = 0; i < 24; i++) {
                 const angle = i * 15;
                 const isMajor = i % 3 === 0;
@@ -753,6 +1147,18 @@
                     line.setAttribute("y2", "26");
                     line.setAttribute("transform", `rotate(${angle} 100 100)`);
                     markers.appendChild(line);
+
+                    // Badge background behind label
+                    const badgePos = polarToCartesian(100, 100, 62, angle);
+                    const badge = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    badge.setAttribute("class", "marker-badge");
+                    badge.setAttribute("x", badgePos.x - 10);
+                    badge.setAttribute("y", badgePos.y - 3);
+                    badge.setAttribute("width", "20");
+                    badge.setAttribute("height", "12");
+                    badge.setAttribute("rx", "3");
+                    markers.appendChild(badge);
+                    markerBadgeEls.push({ el: badge, hour: i });
 
                     // Number labels
                     const text = polarToCartesian(100, 100, 62, angle);
@@ -793,6 +1199,13 @@
                     el.setAttribute("class", "marker-text off-peak");
                 }
             });
+            markerBadgeEls.forEach(({ el, hour }) => {
+                if (isHourInPeak(hour, peakStart, peakEnd)) {
+                    el.setAttribute("class", "marker-badge peak");
+                } else {
+                    el.setAttribute("class", "marker-badge off-peak");
+                }
+            });
         }
 
         function fmtH(h) {
@@ -823,54 +1236,115 @@
             dotEl.setAttribute("cx", dotPos.x);
             dotEl.setAttribute("cy", dotPos.y);
 
-            clockEl.textContent = localTime.toLocaleTimeString('en-GB', {
+            // Animated digit update
+            const timeStr = localTime.toLocaleTimeString('en-GB', {
                 hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
             });
+            const newDigits = timeStr.replace(/:/g, '').split('');
+            newDigits.forEach((d, i) => {
+                if (d !== prevDigits[i]) {
+                    const el = digitEls[i];
+                    el.classList.add('exit');
+                    setTimeout(() => {
+                        el.textContent = d;
+                        el.classList.remove('exit');
+                        el.classList.add('enter');
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => el.classList.remove('enter'));
+                        });
+                    }, 100);
+                }
+            });
+            prevDigits = newDigits;
+
+            // Date display
+            clockDateEl.textContent = localTime.toLocaleDateString('en-US', {
+                weekday: 'short', day: 'numeric', month: 'short'
+            }).toUpperCase();
 
             const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
             const etH = etNow.getHours();
             const isPeak = etH >= 8 && etH < 14;
 
-            const dot = '<svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 12 12" style="flex-shrink:0"><circle cx="6" cy="6" r="6" fill="currentColor"/></svg>';
+            // Checkmark-in-circle for active, pause for normal
+            const checkIcon = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>';
+            const pauseIcon = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>';
+
+            const stateChanged = prevIsPeak !== null && prevIsPeak !== isPeak;
             if (!isPeak) {
-                statusDisplay.className = 'status-badge status-on';
-                statusDisplay.innerHTML = dot + ' 2x Limit Active';
+                statusDisplay.className = 'status-badge status-on' + (stateChanged ? ' transitioning' : '');
+                statusDisplay.innerHTML = checkIcon + ' 2x Limit Active';
                 indicatorDot.style.background = '#4ade80';
                 indicatorDot.style.boxShadow = '0 0 10px #4ade80';
+                indicatorDot.style.color = '#4ade80';
             } else {
-                statusDisplay.className = 'status-badge status-off';
-                statusDisplay.innerHTML = dot + ' Normal Limits';
+                statusDisplay.className = 'status-badge status-off' + (stateChanged ? ' transitioning' : '');
+                statusDisplay.innerHTML = pauseIcon + ' Normal Limits';
                 indicatorDot.style.background = '#f59e0b';
                 indicatorDot.style.boxShadow = '0 0 10px #f59e0b';
+                indicatorDot.style.color = '#f59e0b';
             }
+            prevIsPeak = isPeak;
 
             // Countdown timer
             const etM = etNow.getMinutes();
             const etS = etNow.getSeconds();
-            const countdownLabel = document.getElementById('countdownLabel');
-            const countdownTimer = document.getElementById('countdownTimer');
+            const countdownLabelText = document.getElementById('countdownLabelText');
+            const countdownLabel = document.getElementById('countdownLabel').parentElement ? document.getElementById('countdownLabel') : null;
             let remaining;
 
             if (isPeak) {
-                // Count down to 14:00 ET (when green starts)
                 remaining = (13 - etH) * 3600 + (59 - etM) * 60 + (60 - etS);
-                countdownLabel.textContent = '2x starts in';
-                countdownLabel.className = 'countdown-label';
+                countdownLabelText.textContent = '2x starts in';
+                countdownLabelText.parentElement.className = 'countdown-label';
             } else {
-                // Count down to 08:00 ET (when green ends)
                 if (etH >= 14) {
                     remaining = (24 - etH + 8) * 3600 - etM * 60 - etS;
                 } else {
                     remaining = (7 - etH) * 3600 + (59 - etM) * 60 + (60 - etS);
                 }
-                countdownLabel.textContent = '2x ends in';
-                countdownLabel.className = 'countdown-label active';
+                countdownLabelText.textContent = '2x ends in';
+                countdownLabelText.parentElement.className = 'countdown-label active';
             }
 
             const ch = Math.floor(remaining / 3600);
             const cm = Math.floor((remaining % 3600) / 60);
             const cs = remaining % 60;
-            countdownTimer.textContent = `${ch}h ${cm}m ${cs}s`;
+
+            // Animated segment updates
+            function updateSeg(id, val) {
+                const el = document.getElementById(id);
+                const digit = el.querySelector('.seg-digit');
+                const str = String(val).padStart(2, '0');
+                if (digit.textContent !== str) {
+                    digit.classList.add('seg-exit');
+                    setTimeout(() => {
+                        digit.textContent = str;
+                        digit.classList.remove('seg-exit');
+                        digit.classList.add('seg-enter');
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => digit.classList.remove('seg-enter'));
+                        });
+                    }, 60);
+                }
+            }
+            updateSeg('cHrs', ch);
+            updateSeg('cMin', cm);
+            updateSeg('cSec', cs);
+
+            // Progress bar + ring update
+            const totalWindow = isPeak ? 6 * 3600 : 18 * 3600;
+            const elapsed = totalWindow - remaining;
+            const pct = Math.min(100, Math.max(0, (elapsed / totalWindow) * 100));
+            progressBar.style.width = pct + '%';
+            progressBar.style.background = isPeak ? 'var(--orange)' : 'var(--green)';
+            progressBar.style.boxShadow = isPeak ? '0 0 8px var(--orange)' : '0 0 8px var(--green)';
+
+
+            // Window progress bar
+            const wpFill = document.getElementById('windowProgressFill');
+            wpFill.style.width = pct + '%';
+            wpFill.style.background = isPeak ? 'var(--orange)' : 'var(--green)';
         }
 
         function calculate(timeZone, cityName) {
@@ -900,25 +1374,38 @@
             optPath.setAttribute("d", describeArc(100, 100, 89, peakEnd * 15, peakStart * 15));
             arcGroup.appendChild(optPath);
 
-            // Endpoint circles with hour labels at green arc boundaries
+            // Shimmer overlay on green arc
+            const shimmerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            shimmerPath.setAttribute("class", "arc-shimmer");
+            shimmerPath.setAttribute("stroke", "url(#shimmerGrad)");
+            shimmerPath.setAttribute("stroke-width", "14");
+            shimmerPath.setAttribute("d", describeArc(100, 100, 89, peakEnd * 15, peakStart * 15));
+            arcGroup.appendChild(shimmerPath);
+
+            // Endpoint pill labels at green arc boundaries
             const endPointData = [
                 { angle: peakEnd * 15, hour: peakEnd },
                 { angle: peakStart * 15, hour: peakStart }
             ];
             endPointData.forEach(({ angle, hour }) => {
                 const pos = polarToCartesian(100, 100, 89, angle);
-                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("class", "arc-endpoint");
-                circle.setAttribute("cx", pos.x);
-                circle.setAttribute("cy", pos.y);
-                circle.setAttribute("r", "9");
-                arcGroup.appendChild(circle);
+                const pillW = 36, pillH = 16;
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("class", "arc-endpoint");
+                rect.setAttribute("x", pos.x - pillW / 2);
+                rect.setAttribute("y", pos.y - pillH / 2);
+                rect.setAttribute("width", pillW);
+                rect.setAttribute("height", pillH);
+                rect.setAttribute("rx", "8");
+                rect.setAttribute("fill", "#4ade80");
+                rect.setAttribute("filter", "url(#arcGlowStrong)");
+                arcGroup.appendChild(rect);
 
                 const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 label.setAttribute("class", "arc-endpoint-label");
                 label.setAttribute("x", pos.x);
                 label.setAttribute("y", pos.y);
-                label.textContent = Math.floor(hour);
+                label.textContent = fmtH(hour);
                 arcGroup.appendChild(label);
             });
 
@@ -933,6 +1420,22 @@
             locLabel.innerText = cityName || timeZone.split('/').pop().replace(/_/g, ' ');
             windowDisplay.innerHTML = slots.map(s => `<div class="time-slot">${s}</div>`).join('');
             avoidDisplay.innerText = `${fmtH(peakStart)} – ${fmtH(peakEnd)}`;
+
+            // Mini timeline bar
+            const tlFill = document.getElementById('miniTimelineFill');
+            if (peakStart < peakEnd) {
+                // Off-peak is 0-peakStart and peakEnd-24, show green for off-peak
+                const leftPct = (peakEnd / 24) * 100;
+                const widthPct = ((24 - peakEnd + peakStart) / 24) * 100;
+                tlFill.style.left = leftPct + '%';
+                tlFill.style.width = widthPct + '%';
+            } else {
+                // Off-peak is peakEnd to peakStart (single block)
+                const leftPct = (peakEnd / 24) * 100;
+                const widthPct = ((peakStart - peakEnd) / 24) * 100;
+                tlFill.style.left = leftPct + '%';
+                tlFill.style.width = widthPct + '%';
+            }
 
             updateClock();
         }
@@ -978,7 +1481,7 @@
                     div.id = `autocomplete-option-${idx}`;
                     div.setAttribute('role', 'option');
                     div.setAttribute('aria-selected', 'false');
-                    div.innerHTML = `<div class="city-name">${r.name}${r.admin1 ? ', ' + r.admin1 : ''}</div><div class="city-country">${r.country}</div>`;
+                    div.innerHTML = `<div class="city-row"><div><div class="city-name">${r.name}${r.admin1 ? ', ' + r.admin1 : ''}</div><div class="city-country">${r.country}</div></div><div style="display:flex;align-items:center">${r.country_code ? '<span class="country-code">' + r.country_code + '</span>' : ''}<span class="enter-hint">\u21A9</span></div></div>`;
                     div.onclick = () => {
                         const name = `${r.name}${r.admin1 ? ', ' + r.admin1 : ''}, ${r.country}`;
                         search.value = name;
@@ -1016,6 +1519,26 @@
         });
 
         document.addEventListener('click', (e) => { if (!search.contains(e.target)) closeDropdown(); });
+
+        // Typewriter animation
+        (function() {
+            const text = 'Find your off-peak usage window';
+            const el = document.getElementById('typewriter');
+            const cursor = document.getElementById('typewriterCursor');
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < text.length) {
+                    el.textContent += text[i];
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    cursor.classList.add('done');
+                }
+            }, 40);
+        })();
+
+        // Progress bar
+        const progressBar = document.getElementById('progress-bar');
 
         createMarkers();
         calculate(currentTimeZone, null);
